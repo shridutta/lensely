@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lensly X — Learning</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+
+.brand-row { display:flex; align-items:center; justify-content:space-between; padding:0 20px; }
+.brand-mark { display:flex; align-items:baseline; gap:4px; font-family:var(--serif); font-size:15px; letter-spacing:1px; }
+.brand-mark .lensly { color:var(--muted); font-weight:300; }
+.brand-mark .x { color:var(--accent); font-weight:600; font-size:17px; border:1px solid var(--accent); border-radius:4px; padding:0px 6px; line-height:1.5; margin-left:2px; }
+
+.page-header { padding:14px 20px 0; }
+
+.search-bar { display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:11px 16px; margin-top:12px; }
+.search-bar .icon { font-size:14px; color:var(--muted); }
+.search-bar .placeholder { font-size:12px; color:var(--muted); }
+
+/* ── Category chips ── */
+.cat-chips { display:flex; gap:6px; overflow-x:auto; margin-top:14px; padding-bottom:2px; }
+
+/* ── Featured banner ── */
+.featured-course {
+  margin-top:16px; background:linear-gradient(135deg,#1a150a 0%,#241c0e 100%);
+  border:1px solid #3a2e1a; border-radius:var(--r-md); padding:18px; position:relative; overflow:hidden;
+}
+.featured-course::before { content:''; position:absolute; right:-20px; top:-20px; width:120px; height:120px; border:1px solid #3a2e1a; border-radius:50%; opacity:.5; }
+.fc-badge { font-size:8px; letter-spacing:1.5px; text-transform:uppercase; background:var(--accent); color:#0d0d0d; padding:3px 8px; border-radius:3px; }
+.fc-title { font-family:var(--serif); font-size:20px; margin-top:10px; line-height:1.2; }
+.fc-instructor { font-size:10px; color:var(--muted); margin-top:4px; }
+.fc-meta-row { display:flex; align-items:center; gap:10px; margin-top:10px; font-size:10px; color:var(--muted); }
+.fc-price-row { display:flex; align-items:center; justify-content:space-between; margin-top:14px; }
+.fc-price { font-family:var(--serif); font-size:22px; color:var(--accent); }
+.fc-price .strike { font-size:13px; color:var(--muted); text-decoration:line-through; margin-left:6px; }
+
+/* ── Progress (continue learning) ── */
+.continue-card {
+  display:flex; gap:12px; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-md); padding:13px; align-items:center;
+}
+.continue-card + .continue-card { margin-top:8px; }
+.cc-thumb { width:54px; height:54px; border-radius:var(--r-sm); background:var(--surface2); border:1px solid var(--border-hi); display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+.cc-info { flex:1; min-width:0; }
+.cc-title { font-size:12px; font-weight:500; }
+.cc-progress-track { height:4px; background:var(--border); border-radius:99px; margin-top:7px; overflow:hidden; }
+.cc-progress-fill { height:100%; background:var(--accent); border-radius:99px; }
+.cc-pct { font-size:9px; color:var(--muted); margin-top:4px; }
+.cc-play { width:30px; height:30px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:12px; color:#0d0d0d; flex-shrink:0; cursor:pointer; }
+
+/* ── Course card grid ── */
+.course-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.course-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); overflow:hidden; cursor:pointer; transition:border-color .2s; }
+.course-card:hover { border-color:var(--border-hi); }
+.course-thumb { aspect-ratio:16/10; display:flex; align-items:center; justify-content:center; font-size:26px; opacity:.5; position:relative; }
+.ct1 { background:linear-gradient(135deg,#1e1810,#2a2215); }
+.ct2 { background:linear-gradient(135deg,#111a1e,#15242a); }
+.ct3 { background:linear-gradient(135deg,#1a1118,#251520); }
+.ct4 { background:linear-gradient(135deg,#111810,#162014); }
+.ct5 { background:linear-gradient(135deg,#1e1510,#2a1e12); }
+.ct6 { background:linear-gradient(135deg,#181010,#221414); }
+.free-tag { position:absolute; top:6px; left:6px; font-size:7.5px; letter-spacing:.5px; text-transform:uppercase; background:var(--success); color:white; padding:2px 6px; border-radius:3px; }
+.course-body { padding:10px; }
+.course-title { font-size:11px; font-weight:500; line-height:1.4; }
+.course-instructor { font-size:8.5px; color:var(--muted); margin-top:4px; }
+.course-rating { font-size:9px; margin-top:5px; display:flex; align-items:center; gap:3px; }
+.course-rating .stars { font-size:9px; }
+.course-price-row { display:flex; align-items:center; justify-content:space-between; margin-top:6px; }
+.course-price { font-family:var(--serif); font-size:14px; color:var(--accent); }
+.course-price.free { color:var(--success); font-family:var(--mono); font-size:10px; letter-spacing:.5px; text-transform:uppercase; }
+
+</style>
+</head>
+<body>
+<div class="shell"><div class="phone">
+
+  <div class="status-bar">
+    <span class="time">9:30</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+
+  <div class="brand-row fade-up">
+    <div class="brand-mark"><span class="lensly">LENSLY</span><span class="x">X</span></div>
+  </div>
+
+  <div class="page-header fade-up-2">
+    <h1 class="heading" style="margin-top:6px">Learn &amp; Grow</h1>
+    <p class="body-sm" style="margin-top:2px">Courses built for photographers, by photographers</p>
+  </div>
+
+  <div class="content">
+
+    <div class="search-bar fade-up-2">
+      <span class="icon">🔍</span>
+      <span class="placeholder">Search courses, skills, instructors…</span>
+    </div>
+
+    <div class="cat-chips mt-12 fade-up-3">
+      <span class="chip active">All</span>
+      <span class="chip">Photography</span>
+      <span class="chip">Videography</span>
+      <span class="chip">Editing</span>
+      <span class="chip">Drone</span>
+      <span class="chip">Business</span>
+    </div>
+
+    <!-- Featured course -->
+    <div class="featured-course fade-up-3">
+      <span class="fc-badge">Bestseller</span>
+      <div class="fc-title">Mastering Wedding Photography in India</div>
+      <div class="fc-instructor">by Arjun Kapoor · Lensly Certified Instructor</div>
+      <div class="fc-meta-row">
+        <span class="stars" style="font-size:11px">★★★★★</span>
+        <span>4.8 (2,340 students)</span>
+        <span>·</span>
+        <span>6.5 hrs</span>
+      </div>
+      <div class="fc-price-row">
+        <div class="fc-price">₹799 <span class="strike">₹2,499</span></div>
+        <button class="btn btn-primary" style="width:auto;padding:10px 18px;font-size:10px">Enroll Now</button>
+      </div>
+    </div>
+
+    <!-- Continue learning -->
+    <p class="section-label fade-up-4">Continue Learning</p>
+    <div class="fade-up-4">
+      <div class="continue-card">
+        <div class="cc-thumb">🎬</div>
+        <div class="cc-info">
+          <div class="cc-title">Cinematic Color Grading in Premiere Pro</div>
+          <div class="cc-progress-track"><div class="cc-progress-fill" style="width:62%"></div></div>
+          <div class="cc-pct">62% complete · 8 of 13 lessons</div>
+        </div>
+        <div class="cc-play">▶</div>
+      </div>
+      <div class="continue-card">
+        <div class="cc-thumb">🚁</div>
+        <div class="cc-info">
+          <div class="cc-title">Drone Pilot Certification Prep (DGCA)</div>
+          <div class="cc-progress-track"><div class="cc-progress-fill" style="width:24%"></div></div>
+          <div class="cc-pct">24% complete · 3 of 12 lessons</div>
+        </div>
+        <div class="cc-play">▶</div>
+      </div>
+    </div>
+
+    <!-- Popular courses -->
+    <p class="section-label fade-up-5">Popular Courses</p>
+    <div class="course-grid fade-up-5">
+
+      <div class="course-card">
+        <div class="course-thumb ct1">📸</div>
+        <div class="course-body">
+          <div class="course-title">Off-Camera Flash Lighting Mastery</div>
+          <div class="course-instructor">Rhea Singh</div>
+          <div class="course-rating"><span class="stars">★★★★★</span><span style="color:var(--muted)">4.9</span></div>
+          <div class="course-price-row"><span class="course-price">₹1,299</span></div>
+        </div>
+      </div>
+
+      <div class="course-card">
+        <div class="course-thumb ct2">
+          <span class="free-tag">Free</span>
+          🎥
+        </div>
+        <div class="course-body">
+          <div class="course-title">Intro to Cinematic Storytelling</div>
+          <div class="course-instructor">Karan Mehta</div>
+          <div class="course-rating"><span class="stars">★★★★☆</span><span style="color:var(--muted)">4.6</span></div>
+          <div class="course-price-row"><span class="course-price free">Free</span></div>
+        </div>
+      </div>
+
+      <div class="course-card">
+        <div class="course-thumb ct3">🖼</div>
+        <div class="course-body">
+          <div class="course-title">Lightroom Editing for Wedding Photographers</div>
+          <div class="course-instructor">Sofia Reyes</div>
+          <div class="course-rating"><span class="stars">★★★★★</span><span style="color:var(--muted)">5.0</span></div>
+          <div class="course-price-row"><span class="course-price">₹999</span></div>
+        </div>
+      </div>
+
+      <div class="course-card">
+        <div class="course-thumb ct4">💼</div>
+        <div class="course-body">
+          <div class="course-title">Pricing &amp; Client Negotiation for Freelancers</div>
+          <div class="course-instructor">Vikram Joshi</div>
+          <div class="course-rating"><span class="stars">★★★★☆</span><span style="color:var(--muted)">4.7</span></div>
+          <div class="course-price-row"><span class="course-price">₹599</span></div>
+        </div>
+      </div>
+
+      <div class="course-card">
+        <div class="course-thumb ct5">
+          <span class="free-tag">Free</span>
+          🌿
+        </div>
+        <div class="course-body">
+          <div class="course-title">Natural Light Portraits 101</div>
+          <div class="course-instructor">Priya Nair</div>
+          <div class="course-rating"><span class="stars">★★★★★</span><span style="color:var(--muted)">4.8</span></div>
+          <div class="course-price-row"><span class="course-price free">Free</span></div>
+        </div>
+      </div>
+
+      <div class="course-card">
+        <div class="course-thumb ct6">🏙</div>
+        <div class="course-body">
+          <div class="course-title">Architectural &amp; Real Estate Photography</div>
+          <div class="course-instructor">David Kwan</div>
+          <div class="course-rating"><span class="stars">★★★★☆</span><span style="color:var(--muted)">4.5</span></div>
+          <div class="course-price-row"><span class="course-price">₹1,499</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="height:24px"></div>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <a href="lensly-x-feed.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Feed
+    </a>
+    <a href="lensly-x-learning.html" class="nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+      Learning
+    </a>
+    <a href="lensly-x-profile.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+      Profile
+    </a>
+    <a href="lensly-x-shop.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      Shop
+    </a>
+  </nav>
+
+</div></div>
+</body>
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lensly X — Calendar</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+
+/* ── Brand strip ── */
+.brand-row { display:flex; align-items:center; justify-content:space-between; padding:0 20px; }
+.brand-mark { display:flex; align-items:baseline; gap:4px; font-family:var(--serif); font-size:15px; letter-spacing:1px; }
+.brand-mark .lensly { color:var(--muted); font-weight:300; }
+.brand-mark .x { color:var(--accent); font-weight:600; font-size:17px; border:1px solid var(--accent); border-radius:4px; padding:0px 6px; line-height:1.5; margin-left:2px; }
+.brand-sub { font-size:8px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-top:1px; }
+
+.page-header { padding:14px 20px 0; }
+
+/* ── Month nav ── */
+.month-nav { display:flex; align-items:center; justify-content:space-between; padding:4px 0; }
+.month-label { font-family:var(--serif); font-size:20px; }
+.month-btn {
+  width:34px; height:34px; border:1px solid var(--border); border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--muted); font-size:16px; background:none; transition:all .2s;
+}
+.month-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+/* ── Calendar grid ── */
+.cal-header { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; margin:10px 0 4px; }
+.cal-hd { text-align:center; font-size:9px; color:var(--muted); letter-spacing:1px; padding:4px 0; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+.cal-day {
+  aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  border-radius:var(--r-sm); font-size:13px; cursor:pointer; transition:all .15s;
+  border:1.5px solid transparent; position:relative;
+}
+.cal-day.empty { cursor:default; }
+.cal-day.available { background:var(--surface); border-color:var(--border); color:var(--text); }
+.cal-day.available:hover { border-color:var(--accent); }
+.cal-day.blocked { background:var(--bg); border-color:var(--border); color:var(--muted); opacity:.4; }
+.cal-day.booked-half { background:#2a1e08; border-color:#3a2e18; color:var(--accent); font-weight:500; }
+.cal-day.booked-full { background:var(--accent); border-color:var(--accent); color:#0d0d0d; font-weight:600; }
+.cal-day.today { box-shadow:0 0 0 1.5px var(--accent) inset; }
+.cal-day .dot { width:4px; height:4px; border-radius:50%; background:var(--accent); margin-top:2px; }
+.cal-day.booked-full .dot { background:#0d0d0d; }
+
+/* ── Legend ── */
+.legend { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; font-size:8.5px; color:var(--muted); }
+.legend-item { display:flex; align-items:center; gap:4px; }
+.legend-dot { width:10px; height:10px; border-radius:3px; border:1.5px solid; }
+.ld-avail  { background:var(--surface); border-color:var(--border); }
+.ld-half   { background:#2a1e08; border-color:#3a2e18; }
+.ld-full   { background:var(--accent); border-color:var(--accent); }
+.ld-block  { background:var(--bg); border-color:var(--border); opacity:.5; }
+
+/* ── Day detail panel ── */
+.day-panel {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-md); padding:14px; margin-top:16px;
+  display:none;
+}
+.day-panel.show { display:block; animation:fadeUp .25s ease both; }
+.day-panel-title { font-family:var(--serif); font-size:16px; }
+.day-panel-sub { font-size:10px; color:var(--muted); margin-top:2px; }
+
+.dp-booking-card {
+  margin-top:12px; padding:11px; background:var(--surface2);
+  border:1px solid var(--border); border-radius:var(--r-sm);
+}
+.dp-row { display:flex; align-items:center; gap:8px; font-size:11px; padding:3px 0; }
+.dp-row .ic { width:16px; text-align:center; flex-shrink:0; }
+.dp-row .muted { color:var(--muted); }
+
+.dp-toggle-row {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-top:12px; padding-top:12px; border-top:1px solid var(--border);
+}
+.dp-toggle-label { font-size:11px; color:var(--text); }
+.dp-toggle-sub { font-size:9px; color:var(--muted); margin-top:2px; }
+.toggle {
+  width:38px; height:22px; background:var(--border); border-radius:99px;
+  position:relative; transition:background .2s; cursor:pointer; flex-shrink:0;
+}
+.toggle.on { background:var(--accent); }
+.toggle::after {
+  content:''; position:absolute; width:16px; height:16px; background:white;
+  border-radius:50%; top:3px; left:3px; transition:transform .2s;
+}
+.toggle.on::after { transform:translateX(16px); }
+
+/* ── Upcoming list ── */
+.upcoming-item {
+  display:flex; align-items:center; gap:11px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-md); padding:12px 14px;
+}
+.upcoming-item + .upcoming-item { margin-top:8px; }
+.up-date-block {
+  width:42px; height:42px; border-radius:var(--r-sm);
+  background:var(--surface2); border:1px solid var(--border-hi);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.up-date-block .day-num { font-family:var(--serif); font-size:15px; color:var(--accent); line-height:1; }
+.up-date-block .mon { font-size:7px; color:var(--muted); letter-spacing:.5px; text-transform:uppercase; }
+.up-info { flex:1; min-width:0; }
+.up-client { font-family:var(--serif); font-size:13px; }
+.up-meta { font-size:9px; color:var(--muted); margin-top:2px; }
+.up-pkg-badge {
+  font-size:8px; letter-spacing:.5px; padding:3px 7px; border-radius:99px; flex-shrink:0;
+}
+.up-badge-half { background:#2a1e08; color:var(--accent); border:1px solid #3a2e18; }
+.up-badge-full { background:var(--accent); color:#0d0d0d; }
+
+</style>
+</head>
+<body>
+<div class="shell"><div class="phone">
+
+  <div class="status-bar">
+    <span class="time">9:30</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+
+  <div class="brand-row fade-up">
+    <div>
+      <div class="brand-mark"><span class="lensly">LENSLY</span><span class="x">X</span></div>
+      <div class="brand-sub">For Freelance Professionals</div>
+    </div>
+    <a href="lensly-x-profile.html" style="font-size:9px;color:var(--muted);letter-spacing:1px;text-decoration:none;text-transform:uppercase">← Profile</a>
+  </div>
+
+  <div class="page-header fade-up-2">
+    <h1 class="heading" style="margin-top:6px">My Calendar</h1>
+    <p class="body-sm" style="margin-top:2px">Manage availability &amp; view bookings</p>
+  </div>
+
+  <div class="content">
+
+    <!-- Month nav -->
+    <div class="month-nav mt-16 fade-up-3">
+      <button class="month-btn" onclick="changeMonth(-1)">‹</button>
+      <span class="month-label" id="monthLabel">July 2026</span>
+      <button class="month-btn" onclick="changeMonth(1)">›</button>
+    </div>
+
+    <div class="cal-header fade-up-3">
+      <div class="cal-hd">SU</div><div class="cal-hd">MO</div><div class="cal-hd">TU</div>
+      <div class="cal-hd">WE</div><div class="cal-hd">TH</div><div class="cal-hd">FR</div><div class="cal-hd">SA</div>
+    </div>
+    <div class="cal-grid fade-up-3" id="calGrid"></div>
+
+    <div class="legend fade-up-3">
+      <div class="legend-item"><div class="legend-dot ld-avail"></div>Available</div>
+      <div class="legend-item"><div class="legend-dot ld-half"></div>Half Day booked</div>
+      <div class="legend-item"><div class="legend-dot ld-full"></div>Full Day booked</div>
+      <div class="legend-item"><div class="legend-dot ld-block"></div>Blocked</div>
+    </div>
+
+    <!-- Day detail panel -->
+    <div class="day-panel" id="dayPanel">
+      <div class="day-panel-title" id="dpTitle">Sat, 12 Jul</div>
+      <div class="day-panel-sub" id="dpSub">No bookings on this date</div>
+
+      <div class="dp-booking-card" id="dpBookingCard" style="display:none">
+        <div class="dp-row"><span class="ic">👤</span><span id="dpClient">Ananya Sharma</span></div>
+        <div class="dp-row"><span class="ic">⏱</span><span class="muted" id="dpTime">9:00 AM – 9:00 PM</span></div>
+        <div class="dp-row"><span class="ic">📍</span><span class="muted" id="dpLoc">Taj Lands End, Mumbai</span></div>
+      </div>
+
+      <div class="dp-toggle-row" id="dpToggleRow">
+        <div>
+          <div class="dp-toggle-label">Available for booking</div>
+          <div class="dp-toggle-sub">Turn off to block this date</div>
+        </div>
+        <div class="toggle on" id="availToggle" onclick="toggleAvailability()"></div>
+      </div>
+    </div>
+
+    <!-- Upcoming bookings list -->
+    <p class="section-label fade-up-4">Upcoming Bookings</p>
+    <div class="fade-up-4">
+      <div class="upcoming-item">
+        <div class="up-date-block"><span class="day-num">12</span><span class="mon">Jul</span></div>
+        <div class="up-info">
+          <div class="up-client">Ananya Sharma</div>
+          <div class="up-meta">Wedding · Taj Lands End, Mumbai</div>
+        </div>
+        <span class="up-pkg-badge up-badge-full">Full Day</span>
+      </div>
+      <div class="upcoming-item">
+        <div class="up-date-block"><span class="day-num">13</span><span class="mon">Jul</span></div>
+        <div class="up-info">
+          <div class="up-client">Rohan Mehta</div>
+          <div class="up-meta">Birthday · Bandra, Mumbai</div>
+        </div>
+        <span class="up-pkg-badge up-badge-half">Half Day</span>
+      </div>
+      <div class="upcoming-item">
+        <div class="up-date-block"><span class="day-num">18</span><span class="mon">Jul</span></div>
+        <div class="up-info">
+          <div class="up-client">Priya &amp; Arjun</div>
+          <div class="up-meta">Pre-Wedding · ITC Maratha</div>
+        </div>
+        <span class="up-pkg-badge up-badge-full">Full Day</span>
+      </div>
+    </div>
+
+    <div style="height:24px"></div>
+  </div>
+
+  <!-- Bottom nav -->
+    <nav class="bottom-nav">
+    <a href="lensly-x-feed.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Feed
+    </a>
+    <a href="lensly-x-learning.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+      Learning
+    </a>
+    <a href="lensly-x-profile.html" class="nav-item active">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+      Profile
+    </a>
+    <a href="lensly-x-shop.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      Shop
+    </a>
+  </nav>
+
+</div></div>
+
+<script>
+/* ══════════════════════════════════════
+   DEMO DATA — bookings by day-of-month
+══════════════════════════════════════ */
+const BOOKINGS = {
+  12: { type:'full', client:'Ananya Sharma', time:'9:00 AM – 9:00 PM', loc:'Taj Lands End, Mumbai' },
+  13: { type:'half', client:'Rohan Mehta', time:'4:00 PM – 10:00 PM', loc:'Bandra, Mumbai' },
+  16: { type:'half', client:'Kavita & Family', time:'11:00 AM – 5:00 PM', loc:'Andheri, Mumbai' },
+  18: { type:'full', client:'Priya & Arjun', time:'8:00 AM – 8:00 PM', loc:'ITC Maratha, Mumbai' },
+};
+const BLOCKED_DAYS = [4, 5, 20, 21]; // freelancer manually blocked these
+
+let viewMonth = 6; // July (0-indexed)
+let viewYear  = 2026;
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function renderCalendar() {
+  const grid = document.getElementById('calGrid');
+  document.getElementById('monthLabel').textContent = MONTHS[viewMonth] + ' ' + viewYear;
+  grid.innerHTML = '';
+
+  const firstDow = new Date(viewYear, viewMonth, 1).getDay();
+  const totalDays = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const today = new Date();
+  const isCurrentMonth = (today.getMonth() === viewMonth && today.getFullYear() === viewYear);
+
+  for (let i = 0; i < firstDow; i++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day empty';
+    grid.appendChild(el);
+  }
+
+  for (let d = 1; d <= totalDays; d++) {
+    const el = document.createElement('div');
+    el.dataset.day = d;
+
+    const booking = (viewMonth === 6 && viewYear === 2026) ? BOOKINGS[d] : null;
+    const isBlocked = (viewMonth === 6 && viewYear === 2026) && BLOCKED_DAYS.includes(d);
+    const isToday = isCurrentMonth && d === today.getDate();
+
+    if (booking) {
+      el.className = 'cal-day ' + (booking.type === 'half' ? 'booked-half' : 'booked-full');
+      el.innerHTML = `<span>${d}</span><div class="dot"></div>`;
+    } else if (isBlocked) {
+      el.className = 'cal-day blocked';
+      el.innerHTML = `<span>${d}</span>`;
+    } else {
+      el.className = 'cal-day available';
+      el.innerHTML = `<span>${d}</span>`;
+    }
+    if (isToday) el.classList.add('today');
+
+    el.addEventListener('click', () => openDayPanel(d, booking, isBlocked));
+    grid.appendChild(el);
+  }
+}
+
+function changeMonth(delta) {
+  viewMonth += delta;
+  if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+  if (viewMonth < 0)  { viewMonth = 11; viewYear--; }
+  document.getElementById('dayPanel').classList.remove('show');
+  renderCalendar();
+}
+
+let currentPanelDay = null;
+let currentPanelBlocked = false;
+
+function openDayPanel(day, booking, isBlocked) {
+  currentPanelDay = day;
+  currentPanelBlocked = isBlocked;
+
+  const panel = document.getElementById('dayPanel');
+  const dow = new Date(viewYear, viewMonth, day).getDay();
+  const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  document.getElementById('dpTitle').textContent = `${DOW[dow]}, ${day} ${MONTHS[viewMonth].slice(0,3)}`;
+
+  const bookingCard = document.getElementById('dpBookingCard');
+  const toggleRow = document.getElementById('dpToggleRow');
+
+  if (booking) {
+    document.getElementById('dpSub').textContent = 'You have a booking on this date';
+    bookingCard.style.display = 'block';
+    toggleRow.style.display = 'none';
+    document.getElementById('dpClient').textContent = booking.client;
+    document.getElementById('dpTime').textContent = booking.time;
+    document.getElementById('dpLoc').textContent = booking.loc;
+  } else {
+    document.getElementById('dpSub').textContent = isBlocked
+      ? 'This date is currently blocked'
+      : 'This date is open for booking';
+    bookingCard.style.display = 'none';
+    toggleRow.style.display = 'flex';
+    document.getElementById('availToggle').classList.toggle('on', !isBlocked);
+  }
+
+  panel.classList.add('show');
+}
+
+function toggleAvailability() {
+  const toggle = document.getElementById('availToggle');
+  toggle.classList.toggle('on');
+  const isAvailable = toggle.classList.contains('on');
+
+  if (currentPanelDay) {
+    const idx = BLOCKED_DAYS.indexOf(currentPanelDay);
+    if (isAvailable && idx > -1) BLOCKED_DAYS.splice(idx, 1);
+    if (!isAvailable && idx === -1) BLOCKED_DAYS.push(currentPanelDay);
+    renderCalendar();
+  }
+}
+
+renderCalendar();
+</script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lensly — What Do You Need?</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+
+/* ── Hero ── */
+.svc-hero { padding:8px 20px 0; }
+.svc-hint { font-size:11px; color:var(--muted); line-height:1.7; margin-top:8px; }
+
+/* ── Selected pill ── */
+.svc-selected-bar {
+  position:sticky; top:0; z-index:5;
+  display:flex; align-items:center; gap:10px;
+  background:linear-gradient(135deg,#1a150a,var(--surface));
+  border:1px solid var(--accent); border-radius:var(--r-sm);
+  padding:10px 14px; margin-top:14px;
+  display:none;
+}
+.svc-selected-bar.show { display:flex; }
+.svc-selected-icon { font-size:18px; }
+.svc-selected-text { font-size:11px; color:var(--text); flex:1; }
+.svc-selected-text strong { color:var(--accent); }
+.svc-selected-tick { font-size:14px; color:var(--accent); }
+
+/* ── Service list (single column, radio style) ── */
+.svc-list { display:flex; flex-direction:column; gap:8px; margin-top:14px; }
+
+.svc-row {
+  display:flex; align-items:center; gap:12px;
+  background:var(--surface); border:1.5px solid var(--border);
+  border-radius:var(--r-md); padding:13px 14px;
+  cursor:pointer; transition:all .2s; position:relative;
+}
+.svc-row:hover { border-color:var(--border-hi); }
+.svc-row.selected { border-color:var(--accent); background:#191510; }
+
+.svc-icon-wrap {
+  width:44px; height:44px; border-radius:50%;
+  background:var(--surface2); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; flex-shrink:0; transition:all .2s;
+}
+.svc-row.selected .svc-icon-wrap {
+  background:linear-gradient(135deg,#2a2010,#1a150a);
+  border-color:var(--accent);
+}
+
+.svc-row-info { flex:1; min-width:0; }
+.svc-name { font-family:var(--serif); font-size:15px; line-height:1.2; }
+.svc-desc { font-size:9.5px; color:var(--muted); margin-top:3px; line-height:1.5; }
+
+/* Radio circle on the right */
+.svc-radio {
+  width:20px; height:20px; border-radius:50%;
+  border:1.5px solid var(--border-hi);
+  flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  transition:all .2s;
+}
+.svc-radio::after {
+  content:''; width:10px; height:10px; border-radius:50%;
+  background:var(--accent); transform:scale(0); transition:transform .15s;
+}
+.svc-row.selected .svc-radio { border-color:var(--accent); }
+.svc-row.selected .svc-radio::after { transform:scale(1); }
+
+/* Popular badge */
+.svc-badge {
+  position:absolute; top:-7px; left:50px;
+  font-size:7px; letter-spacing:1px; text-transform:uppercase;
+  background:#2a1208; color:var(--accent); border:1px solid #3a2218;
+  border-radius:3px; padding:2px 6px;
+}
+
+/* ── Helper note box ── */
+.svc-note {
+  background:#111820; border:1px solid #1e2e3a;
+  border-radius:var(--r-sm); padding:11px 13px;
+  font-size:10.5px; color:#6a9ab0; line-height:1.7;
+  display:flex; gap:8px; align-items:flex-start; margin-top:18px;
+}
+
+/* ── CTA ── */
+.svc-cta-area { margin-top:20px; }
+.svc-skip {
+  display:block; text-align:center; font-size:10px; color:var(--muted);
+  letter-spacing:1px; text-transform:uppercase; text-decoration:none;
+  margin-top:10px; transition:color .2s;
+}
+.svc-skip:hover { color:var(--accent); }
+
+</style>
+</head>
+<body>
+<div class="shell"><div class="phone">
+
+  <div class="status-bar">
+    <span class="time">9:40</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+
+  <div class="svc-hero fade-up">
+    <p class="label">LET'S GET STARTED</p>
+    <h1 class="display" style="margin-top:6px">What do you<br><em>need today?</em></h1>
+    <p class="svc-hint">Pick the one service you're looking for. You can always change this later.</p>
+  </div>
+
+  <div class="content">
+
+    <!-- Selected confirmation bar -->
+    <div class="svc-selected-bar" id="svcSelectedBar">
+      <span class="svc-selected-icon" id="svcSelectedIcon">📷</span>
+      <span class="svc-selected-text">You're looking for a <strong id="svcSelectedName">Photographer</strong></span>
+      <span class="svc-selected-tick">✓</span>
+    </div>
+
+    <!-- Service list — single select -->
+    <div class="svc-list fade-up-2" id="svcList">
+
+      <div class="svc-row" data-svc="photographer" data-name="Photographer" data-icon="📷" onclick="selectSvc(this)">
+        <span class="svc-badge">Popular</span>
+        <div class="svc-icon-wrap">📷</div>
+        <div class="svc-row-info">
+          <div class="svc-name">Photographer</div>
+          <div class="svc-desc">General photo coverage for any event</div>
+        </div>
+        <div class="svc-radio"></div>
+      </div>
+
+      <div class="svc-row" data-svc="cinematographer" data-name="Cinematographer" data-icon="🎬" onclick="selectSvc(this)">
+        <div class="svc-icon-wrap">🎬</div>
+        <div class="svc-row-info">
+          <div class="svc-name">Cinematographer</div>
+          <div class="svc-desc">Cinematic film &amp; story-style video</div>
+        </div>
+        <div class="svc-radio"></div>
+      </div>
+
+      <div class="svc-row" data-svc="candid" data-name="Candid Photographer" data-icon="🤳" onclick="selectSvc(this)">
+        <span class="svc-badge">Popular</span>
+        <div class="svc-icon-wrap">🤳</div>
+        <div class="svc-row-info">
+          <div class="svc-name">Candid Photographer</div>
+          <div class="svc-desc">Unposed, natural moment capture</div>
+        </div>
+        <div class="svc-radio"></div>
+      </div>
+
+      <div class="svc-row" data-svc="traditional-photo" data-name="Traditional Photographer" data-icon="🖼" onclick="selectSvc(this)">
+        <div class="svc-icon-wrap">🖼</div>
+        <div class="svc-row-info">
+          <div class="svc-name">Traditional Photographer</div>
+          <div class="svc-desc">Posed, ritual &amp; formal shots</div>
+        </div>
+        <div class="svc-radio"></div>
+      </div>
+
+      <div class="svc-row" data-svc="traditional-video" data-name="Traditional Videographer" data-icon="📼" onclick="selectSvc(this)">
+        <div class="svc-icon-wrap">📼</div>
+        <div class="svc-row-info">
+          <div class="svc-name">Traditional Videographer</div>
+          <div class="svc-desc">Full ceremony &amp; ritual recording</div>
+        </div>
+        <div class="svc-radio"></div>
+      </div>
+
+      <div class="svc-row" data-svc="drone" data-name="Drone Pilot" data-icon="🚁" onclick="selectSvc(this)">
+        <div class="svc-icon-wrap">🚁</div>
+        <div class="svc-row-info">
+          <div class="svc-name">Drone Pilot</div>
+          <div class="svc-desc">Aerial photos &amp; video, licensed</div>
+        </div>
+        <div class="svc-radio"></div>
+      </div>
+
+      <div class="svc-row" data-svc="assistant" data-name="Assistant" data-icon="🧰" onclick="selectSvc(this)">
+        <div class="svc-icon-wrap">🧰</div>
+        <div class="svc-row-info">
+          <div class="svc-name">Assistant</div>
+          <div class="svc-desc">Lighting, gear &amp; second-shooter help</div>
+        </div>
+        <div class="svc-radio"></div>
+      </div>
+
+    </div>
+
+    <!-- Helper note -->
+    <div class="svc-note fade-up-3">
+      <span style="font-size:14px;flex-shrink:0">💡</span>
+      <span>Need more than one service? Book this one first — you can add another professional separately from your dashboard.</span>
+    </div>
+
+    <!-- CTA -->
+    <div class="svc-cta-area fade-up-4">
+      <button class="btn btn-primary" id="svcContinueBtn" onclick="continueToHome()" style="opacity:.4;pointer-events:none">
+        CONTINUE →
+      </button>
+      <a href="01-home.html" class="svc-skip">Skip — show me everyone</a>
+    </div>
+
+    <div style="height:24px"></div>
+  </div>
+
+</div></div>
+
+<script>
+let selected = null; // only one service can be selected at a time
+
+function selectSvc(row) {
+  // Deselect all others — single-select behaviour
+  document.querySelectorAll('.svc-row').forEach(r => r.classList.remove('selected'));
+  row.classList.add('selected');
+
+  selected = {
+    svc  : row.dataset.svc,
+    name : row.dataset.name,
+    icon : row.dataset.icon
+  };
+
+  updateUI();
+}
+
+function updateUI() {
+  const bar  = document.getElementById('svcSelectedBar');
+  const cont = document.getElementById('svcContinueBtn');
+
+  if (!selected) {
+    bar.classList.remove('show');
+    cont.style.opacity = '.4';
+    cont.style.pointerEvents = 'none';
+    return;
+  }
+
+  document.getElementById('svcSelectedIcon').textContent = selected.icon;
+  document.getElementById('svcSelectedName').textContent = selected.name;
+  bar.classList.add('show');
+
+  cont.style.opacity = '1';
+  cont.style.pointerEvents = 'auto';
+}
+
+function continueToHome() {
+  if (!selected) return;
+  try {
+    // Store as a single service (not an array) — one at a time
+    sessionStorage.setItem('lensly_service_type', JSON.stringify(selected));
+  } catch(e) {}
+  window.location.href = '01-home.html';
+}
+
+/* Restore selection if user comes back */
+(function restore() {
+  try {
+    const raw = sessionStorage.getItem('lensly_service_type');
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    const row = document.querySelector(`.svc-row[data-svc="${saved.svc}"]`);
+    if (row) selectSvc(row);
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>

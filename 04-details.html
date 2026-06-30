@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lensly — Shoot Details</title>
+<link rel="stylesheet" href="css/style.css">
+<!-- Google Maps JS API — replace YOUR_API_KEY with your actual key -->
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places&language=en&region=IN" async defer></script>
+<style>
+
+/* ── Progress ── */
+.progress-track { display:flex; gap:4px; padding:0 20px; margin-bottom:16px; }
+.progress-step  { flex:1; height:3px; border-radius:2px; background:var(--border); }
+.progress-step.done   { background:var(--accent); }
+.progress-step.active { background:var(--accent); opacity:.6; }
+
+/* ── Section card wrapper ── */
+.section-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-md); overflow:hidden;
+}
+.section-card-header {
+  padding:12px 14px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:8px;
+}
+.section-card-icon { font-size:18px; }
+.section-card-title { font-family:var(--serif); font-size:15px; }
+.section-card-badge {
+  margin-left:auto; font-size:9px; letter-spacing:1px;
+  background:#2a1208; color:var(--accent); border:1px solid #3a2218;
+  border-radius:3px; padding:2px 7px; text-transform:uppercase;
+}
+.section-card-body { padding:14px; }
+
+/* ── Work type toggle ── */
+.work-type-toggle {
+  display:grid; grid-template-columns:1fr 1fr; gap:0;
+  border:1.5px solid var(--border); border-radius:var(--r-sm); overflow:hidden;
+}
+.wt-btn {
+  padding:12px 8px; text-align:center; cursor:pointer;
+  transition:all .2s; font-size:11px; letter-spacing:.5px;
+  border:none; background:var(--surface); color:var(--muted); font-family:var(--mono);
+}
+.wt-btn:first-child { border-right:1px solid var(--border); }
+.wt-btn.active { background:var(--accent); color:#0d0d0d; }
+.wt-btn .wt-icon { font-size:18px; display:block; margin-bottom:3px; }
+.wt-btn .wt-label { font-weight:500; }
+.wt-btn .wt-sub { font-size:9px; opacity:.7; margin-top:2px; display:block; }
+
+/* ── Required badge ── */
+.req { color:var(--accent); font-size:11px; margin-left:2px; }
+
+/* ── City + State selects ── */
+.city-state-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.form-select {
+  background:var(--surface); border:1.5px solid var(--border);
+  border-radius:var(--r-sm); padding:11px 12px;
+  font-family:var(--mono); font-size:12px; color:var(--text);
+  outline:none; width:100%; appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6560' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 10px center;
+  cursor:pointer; transition:border-color .2s;
+}
+.form-select:focus { border-color:var(--accent); }
+.form-select option { background:#1f1f1f; }
+
+/* ── City confirmation pill ── */
+.city-confirm {
+  display:none; margin-top:8px;
+  background:#0f2a18; border:1px solid #1e4030;
+  border-radius:var(--r-sm); padding:8px 12px;
+  font-size:11px; color:var(--success);
+  display:flex; align-items:center; gap:6px;
+}
+.city-confirm.hidden { display:none !important; }
+
+/* ── Google Maps search box ── */
+.maps-search-wrap {
+  position:relative; margin-top:10px;
+}
+.maps-search-input {
+  width:100%; background:var(--surface);
+  border:1.5px solid var(--border); border-radius:var(--r-sm);
+  padding:11px 14px 11px 38px;
+  font-family:var(--mono); font-size:12px; color:var(--text);
+  outline:none; transition:border-color .2s;
+}
+.maps-search-input:focus { border-color:var(--accent); }
+.maps-search-input::placeholder { color:var(--muted); }
+.maps-search-icon {
+  position:absolute; left:12px; top:50%; transform:translateY(-50%);
+  font-size:15px; pointer-events:none;
+}
+.maps-validated {
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  font-size:14px; display:none;
+}
+
+/* ── Map embed ── */
+.map-frame {
+  border-radius:var(--r-sm); overflow:hidden;
+  border:1.5px solid var(--border); margin-top:10px;
+  height:160px; position:relative; background:var(--surface2);
+}
+#map { width:100%; height:100%; }
+.map-placeholder {
+  width:100%; height:100%; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:6px;
+  color:var(--muted); font-size:11px; text-align:center;
+}
+.map-placeholder .mp-icon { font-size:28px; opacity:.4; }
+
+/* ── Selected location card ── */
+.loc-confirmed {
+  background:#0f1a0f; border:1.5px solid var(--success);
+  border-radius:var(--r-sm); padding:10px 12px; margin-top:8px;
+  display:none;
+}
+.loc-confirmed.show { display:block; }
+.loc-name-main { font-size:12px; color:var(--text); font-weight:500; }
+.loc-address   { font-size:10px; color:var(--muted); margin-top:2px; line-height:1.5; }
+.loc-coords    { font-size:9px; color:var(--success); margin-top:4px; letter-spacing:.5px; }
+.loc-open-maps {
+  display:inline-flex; align-items:center; gap:4px;
+  margin-top:6px; font-size:10px; color:var(--accent);
+  text-decoration:none; letter-spacing:1px; text-transform:uppercase;
+}
+
+/* ── Assembly point section (outstation only) ── */
+.assembly-section {
+  display:none; margin-top:10px;
+  background:#111820; border:1px solid #1e2e3a;
+  border-radius:var(--r-sm); padding:12px;
+}
+.assembly-section.show { display:block; }
+.assembly-label {
+  font-size:10px; color:#6a9ab0; letter-spacing:1.5px;
+  text-transform:uppercase; margin-bottom:8px;
+  display:flex; align-items:center; gap:6px;
+}
+.assembly-label::after { content:'REQUIRED'; font-size:8px; background:#1e2e3a; padding:2px 5px; border-radius:2px; }
+
+/* ── Shoot purpose ── */
+.purpose-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:2px;
+}
+.purpose-btn {
+  border:1.5px solid var(--border); border-radius:var(--r-sm);
+  padding:11px 10px; cursor:pointer; transition:all .2s;
+  text-align:center; background:var(--surface);
+}
+.purpose-btn:hover { border-color:var(--border-hi); }
+.purpose-btn.active { border-color:var(--accent); background:#1a150a; }
+.purpose-icon  { font-size:20px; display:block; margin-bottom:4px; }
+.purpose-name  { font-size:11px; font-weight:500; color:var(--text); }
+.purpose-btn.active .purpose-name { color:var(--accent); }
+
+/* Custom purpose input */
+.custom-purpose-wrap { margin-top:6px; position:relative; }
+.custom-purpose-input {
+  width:100%; background:var(--surface); border:1.5px solid var(--border);
+  border-radius:var(--r-sm); padding:11px 40px 11px 14px;
+  font-family:var(--mono); font-size:12px; color:var(--text);
+  outline:none; transition:border-color .2s;
+}
+.custom-purpose-input:focus { border-color:var(--accent); }
+.custom-purpose-input::placeholder { color:var(--muted); }
+.custom-purpose-add {
+  position:absolute; right:10px; top:50%; transform:translateY(-50%);
+  font-size:18px; color:var(--muted); cursor:pointer; transition:color .2s;
+  background:none; border:none; line-height:1;
+}
+.custom-purpose-add:hover { color:var(--accent); }
+
+/* Custom tag */
+.custom-tag {
+  display:inline-flex; align-items:center; gap:5px;
+  border:1px solid var(--accent); background:#1a150a;
+  border-radius:99px; padding:4px 10px; font-size:10px;
+  color:var(--accent); margin-top:6px; margin-right:4px;
+}
+.custom-tag-del { cursor:pointer; font-size:12px; opacity:.7; }
+.custom-tag-del:hover { opacity:1; }
+
+/* ── Add-ons ── */
+.addon-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 14px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .15s;
+}
+.addon-row:last-child { border-bottom:none; }
+.addon-row:hover { background:var(--surface2); }
+.addon-name  { font-size:12px; }
+.addon-desc  { font-size:10px; color:var(--muted); margin-top:2px; }
+.addon-right { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.addon-price { font-family:var(--serif); font-size:14px; color:var(--accent); }
+.toggle { width:38px; height:22px; background:var(--border); border-radius:99px; position:relative; transition:background .2s; cursor:pointer; flex-shrink:0; }
+.toggle.on { background:var(--accent); }
+.toggle::after { content:''; position:absolute; width:16px; height:16px; background:white; border-radius:50%; top:3px; left:3px; transition:transform .2s; box-shadow:0 1px 3px rgba(0,0,0,.3); }
+.toggle.on::after { transform:translateX(16px); }
+
+/* ── Notes ── */
+.notes-input {
+  width:100%; background:var(--surface); border:1.5px solid var(--border);
+  border-radius:var(--r-sm); padding:12px 14px; outline:none;
+  font-family:var(--serif); font-style:italic; font-size:14px;
+  color:var(--text); resize:none; height:80px; line-height:1.7;
+  transition:border-color .2s;
+}
+.notes-input:focus { border-color:var(--accent); }
+.notes-input::placeholder { color:var(--muted); }
+
+/* ── Validation error ── */
+.field-error {
+  font-size:10px; color:#c05c3a; margin-top:5px;
+  display:none; align-items:center; gap:4px;
+}
+.field-error.show { display:flex; }
+
+/* ── CTA validate ── */
+.cta-area { margin-top:16px; }
+</style>
+</head>
+<body>
+<div class="shell"><div class="phone">
+
+  <div class="status-bar">
+    <span class="time">9:47</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+
+  <div class="top-nav">
+    <a href="03-datetime.html" class="back-btn">←</a>
+    <span class="nav-title">Shoot Details</span>
+    <span class="nav-action" style="color:var(--muted)">Step 2 of 3</span>
+  </div>
+
+  <div class="progress-track">
+    <div class="progress-step done"></div>
+    <div class="progress-step active"></div>
+    <div class="progress-step"></div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══════════════════════════
+         SECTION 1 — BOOKING CITY
+    ══════════════════════════ -->
+    <div class="section-card fade-up">
+      <div class="section-card-header">
+        <span class="section-card-icon">🏙</span>
+        <span class="section-card-title">Booking City <span class="req">*</span></span>
+        <span class="section-card-badge">Mandatory</span>
+      </div>
+      <div class="section-card-body">
+
+        <p style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.6">
+          This helps the photographer know <strong style="color:var(--text)">which city</strong> the shoot is in — especially important for outstation work.
+        </p>
+
+        <div class="city-state-row">
+          <div>
+            <label class="input-label">City <span class="req">*</span></label>
+            <select class="form-select mt-4" id="citySelect" onchange="onCityChange()">
+              <option value="">Select City</option>
+              <optgroup label="Maharashtra">
+                <option value="Mumbai">Mumbai</option>
+                <option value="Pune">Pune</option>
+                <option value="Nagpur">Nagpur</option>
+                <option value="Nashik">Nashik</option>
+                <option value="Aurangabad">Aurangabad</option>
+              </optgroup>
+              <optgroup label="Delhi NCR">
+                <option value="New Delhi">New Delhi</option>
+                <option value="Gurgaon">Gurgaon</option>
+                <option value="Noida">Noida</option>
+                <option value="Faridabad">Faridabad</option>
+              </optgroup>
+              <optgroup label="Rajasthan">
+                <option value="Jaipur">Jaipur</option>
+                <option value="Udaipur">Udaipur</option>
+                <option value="Jodhpur">Jodhpur</option>
+                <option value="Jaisalmer">Jaisalmer</option>
+              </optgroup>
+              <optgroup label="Gujarat">
+                <option value="Ahmedabad">Ahmedabad</option>
+                <option value="Surat">Surat</option>
+                <option value="Vadodara">Vadodara</option>
+              </optgroup>
+              <optgroup label="Karnataka">
+                <option value="Bengaluru">Bengaluru</option>
+                <option value="Mysuru">Mysuru</option>
+              </optgroup>
+              <optgroup label="Tamil Nadu">
+                <option value="Chennai">Chennai</option>
+                <option value="Coimbatore">Coimbatore</option>
+              </optgroup>
+              <optgroup label="Telangana">
+                <option value="Hyderabad">Hyderabad</option>
+              </optgroup>
+              <optgroup label="West Bengal">
+                <option value="Kolkata">Kolkata</option>
+              </optgroup>
+              <optgroup label="Madhya Pradesh">
+                <option value="Indore">Indore</option>
+                <option value="Bhopal">Bhopal</option>
+              </optgroup>
+              <optgroup label="Uttar Pradesh">
+                <option value="Lucknow">Lucknow</option>
+                <option value="Agra">Agra</option>
+                <option value="Varanasi">Varanasi</option>
+              </optgroup>
+              <option value="Other">Other (type below)</option>
+            </select>
+          </div>
+          <div>
+            <label class="input-label">State <span class="req">*</span></label>
+            <select class="form-select mt-4" id="stateSelect" onchange="onStateChange()">
+              <option value="">Select State</option>
+              <option>Andhra Pradesh</option>
+              <option>Assam</option>
+              <option>Bihar</option>
+              <option>Chhattisgarh</option>
+              <option>Delhi</option>
+              <option>Goa</option>
+              <option>Gujarat</option>
+              <option>Haryana</option>
+              <option>Himachal Pradesh</option>
+              <option>Jharkhand</option>
+              <option>Karnataka</option>
+              <option>Kerala</option>
+              <option>Madhya Pradesh</option>
+              <option>Maharashtra</option>
+              <option>Odisha</option>
+              <option>Punjab</option>
+              <option>Rajasthan</option>
+              <option>Tamil Nadu</option>
+              <option>Telangana</option>
+              <option>Uttar Pradesh</option>
+              <option>Uttarakhand</option>
+              <option>West Bengal</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- City confirmation pill -->
+        <div class="city-confirm hidden" id="cityConfirmPill">
+          <span>✓</span>
+          <span id="cityConfirmText">Shoot city confirmed</span>
+        </div>
+
+        <div class="field-error" id="cityError">
+          <span>⚠</span> Please select both city and state to continue
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════
+         SECTION 2 — WORK TYPE
+    ══════════════════════════ -->
+    <div class="section-card mt-12 fade-up-2">
+      <div class="section-card-header">
+        <span class="section-card-icon">📌</span>
+        <span class="section-card-title">Is this a local or outstation shoot? <span class="req">*</span></span>
+      </div>
+      <div class="section-card-body">
+        <div class="work-type-toggle">
+          <button class="wt-btn active" id="btnLocal" onclick="setWorkType('local')">
+            <span class="wt-icon">🏘</span>
+            <span class="wt-label">Local Shoot</span>
+            <span class="wt-sub">Same city as photographer</span>
+          </button>
+          <button class="wt-btn" id="btnOutstation" onclick="setWorkType('outstation')">
+            <span class="wt-icon">✈️</span>
+            <span class="wt-label">Outstation</span>
+            <span class="wt-sub">Another city / travel required</span>
+          </button>
+        </div>
+
+        <!-- Outstation notice -->
+        <div id="outstationNotice" style="display:none;margin-top:10px;background:#1a1008;border:1px solid #3a2e18;border-radius:var(--r-sm);padding:10px 12px;font-size:11px;color:var(--accent);line-height:1.6">
+          ✈️ <strong>Outstation booking:</strong> Travel, accommodation & meal costs are borne by the client. Please coordinate with your photographer.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════
+         SECTION 3 — SHOOT LOCATION
+    ══════════════════════════ -->
+    <div class="section-card mt-12 fade-up-3">
+      <div class="section-card-header">
+        <span class="section-card-icon">📍</span>
+        <span class="section-card-title" id="locationSectionTitle">Exact Shoot Location <span class="req">*</span></span>
+        <span class="section-card-badge">Google Maps</span>
+      </div>
+      <div class="section-card-body">
+
+        <p class="body-sm" id="locationHint" style="margin-bottom:10px">
+          Search and pin the exact location on the map. The photographer will navigate directly to this pin.
+        </p>
+
+        <!-- Google Places Autocomplete input -->
+        <div class="maps-search-wrap">
+          <span class="maps-search-icon">🔍</span>
+          <input
+            class="maps-search-input"
+            id="locationSearchInput"
+            type="text"
+            placeholder="Search venue, address, landmark…"
+            autocomplete="off"
+          >
+          <span class="maps-validated" id="mapsValidated">✅</span>
+        </div>
+
+        <!-- Map frame -->
+        <div class="map-frame">
+          <div id="mapPlaceholder" class="map-placeholder">
+            <div class="mp-icon">🗺</div>
+            <div>Search a location above<br>to see it on the map</div>
+          </div>
+          <div id="map" style="display:none"></div>
+        </div>
+
+        <!-- Confirmed location card -->
+        <div class="loc-confirmed" id="locConfirmed">
+          <div class="loc-name-main" id="locName">—</div>
+          <div class="loc-address" id="locAddress">—</div>
+          <div class="loc-coords" id="locCoords">—</div>
+          <a class="loc-open-maps" id="locMapsLink" href="#" target="_blank">
+            🗺 Open in Google Maps →
+          </a>
+        </div>
+
+        <!-- Assembly point (outstation only) -->
+        <div class="assembly-section" id="assemblySection">
+          <div class="assembly-label">Assembly / Meeting Point</div>
+          <p style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.6">
+            For outstation shoots, provide a <strong style="color:var(--text)">common assembly point</strong> — a landmark, station, or hotel where the team will meet before travelling together.
+          </p>
+          <div class="maps-search-wrap">
+            <span class="maps-search-icon">🏁</span>
+            <input
+              class="maps-search-input"
+              id="assemblySearchInput"
+              type="text"
+              placeholder="e.g. Pune Railway Station, Hotel XYZ lobby…"
+              autocomplete="off"
+            >
+          </div>
+          <!-- Assembly map -->
+          <div class="map-frame" style="height:130px;margin-top:8px">
+            <div id="assemblyMapPlaceholder" class="map-placeholder">
+              <div class="mp-icon">🏁</div>
+              <div>Search assembly point above</div>
+            </div>
+            <div id="assemblyMap" style="display:none;width:100%;height:100%"></div>
+          </div>
+          <div class="loc-confirmed" id="assemblyConfirmed">
+            <div class="loc-name-main" id="assemblyName">—</div>
+            <div class="loc-address" id="assemblyAddress">—</div>
+          </div>
+        </div>
+
+        <div class="field-error" id="locationError">
+          <span>⚠</span> Please search and confirm the shoot location on the map
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════
+         SECTION 4 — SHOOT PURPOSE
+    ══════════════════════════ -->
+    <div class="section-card mt-12 fade-up-4">
+      <div class="section-card-header">
+        <span class="section-card-icon">🎯</span>
+        <span class="section-card-title">Shoot Purpose <span class="req">*</span></span>
+      </div>
+      <div class="section-card-body">
+        <p style="font-size:11px;color:var(--muted);margin-bottom:12px">Select one or add your own.</p>
+
+        <div class="purpose-grid">
+          <div class="purpose-btn" onclick="togglePurpose(this)" data-purpose="Wedding">
+            <span class="purpose-icon">💍</span>
+            <div class="purpose-name">Wedding</div>
+          </div>
+          <div class="purpose-btn" onclick="togglePurpose(this)" data-purpose="Rokha">
+            <span class="purpose-icon">🤝</span>
+            <div class="purpose-name">Rokha</div>
+          </div>
+          <div class="purpose-btn" onclick="togglePurpose(this)" data-purpose="Anniversary">
+            <span class="purpose-icon">🥂</span>
+            <div class="purpose-name">Anniversary</div>
+          </div>
+          <div class="purpose-btn" onclick="togglePurpose(this)" data-purpose="Birthday">
+            <span class="purpose-icon">🎂</span>
+            <div class="purpose-name">Birthday</div>
+          </div>
+          <div class="purpose-btn" onclick="togglePurpose(this)" data-purpose="Pre-Wedding">
+            <span class="purpose-icon">💑</span>
+            <div class="purpose-name">Pre-Wedding</div>
+          </div>
+        </div>
+
+        <!-- Custom purpose entry -->
+        <div class="custom-purpose-wrap mt-8">
+          <input
+            class="custom-purpose-input"
+            id="customPurposeInput"
+            type="text"
+            placeholder="Other — type your occasion & press +"
+            onkeydown="if(event.key==='Enter') addCustomPurpose()"
+          >
+          <button class="custom-purpose-add" onclick="addCustomPurpose()">＋</button>
+        </div>
+        <div id="customTags"></div>
+
+        <div class="field-error" id="purposeError">
+          <span>⚠</span> Please select or enter the shoot purpose
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════
+         SECTION 5 — ADD-ONS
+    ══════════════════════════ -->
+    <div class="section-card mt-12 fade-up-5">
+      <div class="section-card-header">
+        <span class="section-card-icon">✨</span>
+        <span class="section-card-title">Add-ons <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">(Optional)</span></span>
+      </div>
+      <div onclick="toggleAddon(event)">
+        <div class="addon-row" data-addon="rush">
+          <div><div class="addon-name">Rush Editing (48 hrs)</div><div class="addon-desc">Receive photos in 2 days instead of 7</div></div>
+          <div class="addon-right"><span class="addon-price">+₹3,840</span><div class="toggle" id="tog-rush"></div></div>
+        </div>
+        <div class="addon-row" data-addon="retouch">
+          <div><div class="addon-name">Extra Retouching</div><div class="addon-desc">5 premium colour-graded selects</div></div>
+          <div class="addon-right"><span class="addon-price">+₹2,880</span><div class="toggle on" id="tog-retouch"></div></div>
+        </div>
+        <div class="addon-row" data-addon="video">
+          <div><div class="addon-name">Short Video Reel (60 sec)</div><div class="addon-desc">Highlights reel for Instagram / WhatsApp</div></div>
+          <div class="addon-right"><span class="addon-price">+₹5,000</span><div class="toggle" id="tog-video"></div></div>
+        </div>
+        <div class="addon-row" data-addon="print">
+          <div><div class="addon-name">Print License</div><div class="addon-desc">Commercial & print rights included</div></div>
+          <div class="addon-right"><span class="addon-price">+₹5,760</span><div class="toggle" id="tog-print"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════
+         SECTION 6 — NOTES
+    ══════════════════════════ -->
+    <div class="section-card mt-12 fade-up-5">
+      <div class="section-card-header">
+        <span class="section-card-icon">📝</span>
+        <span class="section-card-title">Notes for Photographer <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">(Optional)</span></span>
+      </div>
+      <div class="section-card-body">
+        <textarea class="notes-input" placeholder="Vibe you're going for, important moments to capture, special requests…"></textarea>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-area fade-up-6">
+      <button class="btn btn-primary" onclick="validateAndContinue()">REVIEW BOOKING →</button>
+    </div>
+
+    <div style="height:24px"></div>
+  </div><!-- /content -->
+</div></div><!-- /phone /shell -->
+
+<script>
+/* ══════════════════════════════════════
+   STATE
+══════════════════════════════════════ */
+let workType      = 'local';   // 'local' | 'outstation'
+let locationPinned = false;    // main location confirmed
+let assemblyPinned = false;    // assembly point confirmed (outstation)
+let selectedCity  = '';
+let selectedState = '';
+let mainMap, mainMarker, assemblyMap, assemblyMarkerObj;
+
+/* ══════════════════════════════════════
+   CITY / STATE
+══════════════════════════════════════ */
+function onCityChange() {
+  selectedCity = document.getElementById('citySelect').value;
+  updateCityPill();
+}
+function onStateChange() {
+  selectedState = document.getElementById('stateSelect').value;
+  updateCityPill();
+}
+function updateCityPill() {
+  const pill = document.getElementById('cityConfirmPill');
+  const err  = document.getElementById('cityError');
+  if (selectedCity && selectedState) {
+    document.getElementById('cityConfirmText').textContent =
+      `📍 ${selectedCity}, ${selectedState} — confirmed`;
+    pill.classList.remove('hidden');
+    err.classList.remove('show');
+  } else {
+    pill.classList.add('hidden');
+  }
+}
+
+/* ══════════════════════════════════════
+   WORK TYPE
+══════════════════════════════════════ */
+function setWorkType(type) {
+  workType = type;
+  document.getElementById('btnLocal').classList.toggle('active', type === 'local');
+  document.getElementById('btnOutstation').classList.toggle('active', type === 'outstation');
+  document.getElementById('outstationNotice').style.display = type === 'outstation' ? 'block' : 'none';
+  document.getElementById('assemblySection').classList.toggle('show', type === 'outstation');
+
+  // Update hint text
+  const hint = document.getElementById('locationHint');
+  const title = document.getElementById('locationSectionTitle');
+  if (type === 'outstation') {
+    hint.textContent = 'Search and pin the exact venue. Also provide an assembly / meeting point below where the team will gather before travelling.';
+    title.innerHTML = 'Shoot Venue (Outstation) <span class="req">*</span>';
+  } else {
+    hint.textContent = 'Search and pin the exact location on the map. The photographer will navigate directly to this pin.';
+    title.innerHTML = 'Exact Shoot Location <span class="req">*</span>';
+  }
+}
+
+/* ══════════════════════════════════════
+   GOOGLE MAPS INTEGRATION
+══════════════════════════════════════ */
+function initMaps() {
+  // Main location autocomplete
+  const mainInput = document.getElementById('locationSearchInput');
+  const mainAuto  = new google.maps.places.Autocomplete(mainInput, {
+    componentRestrictions: { country: 'in' },
+    fields: ['geometry','name','formatted_address']
+  });
+  mainAuto.addListener('place_changed', () => {
+    const place = mainAuto.getPlace();
+    if (!place.geometry) return;
+    const loc = place.geometry.location;
+    showMainMap(loc, place.name, place.formatted_address);
+  });
+
+  // Assembly point autocomplete
+  const asmInput = document.getElementById('assemblySearchInput');
+  const asmAuto  = new google.maps.places.Autocomplete(asmInput, {
+    componentRestrictions: { country: 'in' },
+    fields: ['geometry','name','formatted_address']
+  });
+  asmAuto.addListener('place_changed', () => {
+    const place = asmAuto.getPlace();
+    if (!place.geometry) return;
+    showAssemblyMap(place.geometry.location, place.name, place.formatted_address);
+  });
+}
+
+function showMainMap(loc, name, address) {
+  // Hide placeholder, show map div
+  document.getElementById('mapPlaceholder').style.display = 'none';
+  const mapDiv = document.getElementById('map');
+  mapDiv.style.display = 'block';
+
+  if (!mainMap) {
+    mainMap = new google.maps.Map(mapDiv, {
+      zoom: 16,
+      center: loc,
+      disableDefaultUI: true,
+      zoomControl: true,
+      styles: darkMapStyles()
+    });
+  } else {
+    mainMap.setCenter(loc);
+    mainMap.setZoom(16);
+  }
+
+  if (mainMarker) mainMarker.setMap(null);
+  mainMarker = new google.maps.Marker({
+    map: mainMap, position: loc,
+    icon: {
+      path: google.maps.SymbolPath.CIRCLE,
+      scale: 10, fillColor: '#c9a96e',
+      fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2
+    },
+    animation: google.maps.Animation.DROP
+  });
+
+  // Confirm card
+  const lat = loc.lat().toFixed(6), lng = loc.lng().toFixed(6);
+  document.getElementById('locName').textContent    = name;
+  document.getElementById('locAddress').textContent = address;
+  document.getElementById('locCoords').textContent  = `${lat}, ${lng}`;
+  document.getElementById('locMapsLink').href =
+    `https://www.google.com/maps?q=${lat},${lng}`;
+  document.getElementById('locConfirmed').classList.add('show');
+  document.getElementById('mapsValidated').style.display = 'block';
+  document.getElementById('locationError').classList.remove('show');
+  locationPinned = true;
+}
+
+function showAssemblyMap(loc, name, address) {
+  document.getElementById('assemblyMapPlaceholder').style.display = 'none';
+  const mapDiv = document.getElementById('assemblyMap');
+  mapDiv.style.display = 'block';
+
+  if (!assemblyMap) {
+    assemblyMap = new google.maps.Map(mapDiv, {
+      zoom: 15, center: loc,
+      disableDefaultUI: true,
+      zoomControl: true,
+      styles: darkMapStyles()
+    });
+  } else {
+    assemblyMap.setCenter(loc);
+  }
+  if (assemblyMarkerObj) assemblyMarkerObj.setMap(null);
+  assemblyMarkerObj = new google.maps.Marker({
+    map: assemblyMap, position: loc,
+    icon: {
+      path: google.maps.SymbolPath.CIRCLE,
+      scale: 8, fillColor: '#6a9ab0',
+      fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2
+    }
+  });
+
+  document.getElementById('assemblyName').textContent    = name;
+  document.getElementById('assemblyAddress').textContent = address;
+  document.getElementById('assemblyConfirmed').classList.add('show');
+  assemblyPinned = true;
+}
+
+/* Dark map theme to match the app */
+function darkMapStyles() {
+  return [
+    {elementType:'geometry',stylers:[{color:'#1a1a1a'}]},
+    {elementType:'labels.text.fill',stylers:[{color:'#8a7f72'}]},
+    {elementType:'labels.text.stroke',stylers:[{color:'#0d0d0d'}]},
+    {featureType:'road',elementType:'geometry',stylers:[{color:'#2e2e2e'}]},
+    {featureType:'road',elementType:'geometry.stroke',stylers:[{color:'#1a1a1a'}]},
+    {featureType:'road.highway',elementType:'geometry',stylers:[{color:'#3a3025'}]},
+    {featureType:'water',elementType:'geometry',stylers:[{color:'#111820'}]},
+    {featureType:'poi',elementType:'geometry',stylers:[{color:'#1f1f1f'}]},
+    {featureType:'poi.park',elementType:'geometry',stylers:[{color:'#0f1a0f'}]},
+    {featureType:'transit',elementType:'geometry',stylers:[{color:'#222'}]},
+  ];
+}
+
+/* Fallback: if API key not set, show demo mode */
+function initMapsFallback() {
+  ['locationSearchInput','assemblySearchInput'].forEach(id => {
+    const inp = document.getElementById(id);
+    inp.addEventListener('input', () => {
+      if (inp.value.length > 3) {
+        // Simulate pin after typing (demo)
+        setTimeout(() => {
+          if (id === 'locationSearchInput') simulatePinMain(inp.value);
+          else simulatePinAssembly(inp.value);
+        }, 800);
+      }
+    });
+  });
+}
+
+function simulatePinMain(val) {
+  document.getElementById('mapPlaceholder').innerHTML =
+    `<div style="font-size:14px;color:var(--accent);text-align:center;padding:20px">
+      <div style="font-size:28px;margin-bottom:6px">📍</div>
+      <strong>${val}</strong><br>
+      <span style="font-size:9px;color:var(--muted)">[Live map loads with real API key]</span>
+    </div>`;
+  document.getElementById('locName').textContent    = val;
+  document.getElementById('locAddress').textContent = val + ', India';
+  document.getElementById('locCoords').textContent  = '20.0000°N, 78.0000°E (demo)';
+  document.getElementById('locMapsLink').href = `https://www.google.com/maps/search/${encodeURIComponent(val)}`;
+  document.getElementById('locConfirmed').classList.add('show');
+  document.getElementById('mapsValidated').style.display = 'block';
+  document.getElementById('locationError').classList.remove('show');
+  locationPinned = true;
+}
+
+function simulatePinAssembly(val) {
+  document.getElementById('assemblyMapPlaceholder').innerHTML =
+    `<div style="font-size:14px;color:#6a9ab0;text-align:center;padding:16px">
+      <div style="font-size:24px;margin-bottom:4px">🏁</div><strong>${val}</strong>
+    </div>`;
+  document.getElementById('assemblyName').textContent    = val;
+  document.getElementById('assemblyAddress').textContent = 'Assembly point confirmed';
+  document.getElementById('assemblyConfirmed').classList.add('show');
+  assemblyPinned = true;
+}
+
+/* ══════════════════════════════════════
+   SHOOT PURPOSE
+══════════════════════════════════════ */
+function togglePurpose(btn) {
+  btn.classList.toggle('active');
+  document.getElementById('purposeError').classList.remove('show');
+}
+
+function addCustomPurpose() {
+  const inp = document.getElementById('customPurposeInput');
+  const val = inp.value.trim();
+  if (!val) return;
+  const tag = document.createElement('span');
+  tag.className = 'custom-tag';
+  tag.innerHTML = `${val} <span class="custom-tag-del" onclick="this.parentElement.remove()">✕</span>`;
+  document.getElementById('customTags').appendChild(tag);
+  inp.value = '';
+  document.getElementById('purposeError').classList.remove('show');
+}
+
+function getSelectedPurposes() {
+  const btns = [...document.querySelectorAll('.purpose-btn.active')].map(b => b.dataset.purpose);
+  const tags = [...document.querySelectorAll('.custom-tag')].map(t => t.textContent.replace('✕','').trim());
+  return [...btns, ...tags];
+}
+
+/* ══════════════════════════════════════
+   ADD-ONS
+══════════════════════════════════════ */
+function toggleAddon(e) {
+  const row = e.target.closest('.addon-row');
+  if (!row) return;
+  const tog = row.querySelector('.toggle');
+  if (tog) tog.classList.toggle('on');
+}
+
+/* ══════════════════════════════════════
+   VALIDATION & CONTINUE
+══════════════════════════════════════ */
+function validateAndContinue() {
+  let ok = true;
+
+  // City
+  if (!selectedCity || !selectedState) {
+    document.getElementById('cityError').classList.add('show');
+    document.getElementById('citySelect').scrollIntoView({ behavior:'smooth', block:'center' });
+    ok = false;
+  }
+
+  // Location — optional for now
+
+  // Purpose
+  if (getSelectedPurposes().length === 0) {
+    document.getElementById('purposeError').classList.add('show');
+    if (ok) document.getElementById('purposeError').scrollIntoView({ behavior:'smooth', block:'center' });
+    ok = false;
+  }
+
+  if (!ok) return;
+
+  /* ── Collect add-on data ── */
+  const ADDON_MAP = {
+    'tog-rush'    : { name:'Rush Editing (48 hrs)', cost:3840 },
+    'tog-retouch' : { name:'Extra Retouching',      cost:2880 },
+    'tog-video'   : { name:'Short Video Reel',       cost:5000 },
+    'tog-print'   : { name:'Print License',          cost:5760 },
+  };
+  const addons     = [];
+  const addonCosts = {};
+  Object.entries(ADDON_MAP).forEach(([id, info]) => {
+    const tog = document.getElementById(id);
+    if (tog && tog.classList.contains('on')) {
+      addons.push(info.name);
+      addonCosts[info.name] = info.cost;
+    }
+  });
+
+  /* ── Collect location strings ── */
+  const locationVal  = document.getElementById('locName')
+                        ? document.getElementById('locName').textContent.trim() : '';
+  const locationAddr = document.getElementById('locAddress')
+                        ? document.getElementById('locAddress').textContent.trim() : '';
+  const assemblyVal  = document.getElementById('assemblyName')
+                        ? document.getElementById('assemblyName').textContent.trim() : '';
+
+  /* ── Build details object ── */
+  const details = {
+    city       : selectedCity,
+    state      : selectedState,
+    workType   : workType,
+    location   : locationVal && locationVal !== '—' ? locationVal : '',
+    locationAddress : locationAddr && locationAddr !== '—' ? locationAddr : '',
+    assembly   : assemblyVal && assemblyVal !== '—' ? assemblyVal : '',
+    purposes   : getSelectedPurposes(),
+    addons,
+    addonCosts,
+  };
+
+  /* ── Save to sessionStorage ── */
+  try {
+    sessionStorage.setItem('lensly_details', JSON.stringify(details));
+  } catch(e) {}
+
+  window.location.href = '05-review.html';
+}
+
+/* ══════════════════════════════════════
+   RESTORE state if user presses back
+══════════════════════════════════════ */
+function restoreDetails() {
+  try {
+    const raw = sessionStorage.getItem('lensly_details');
+    if (!raw) return;
+    const d = JSON.parse(raw);
+
+    // City / state
+    if (d.city) {
+      document.getElementById('citySelect').value = d.city;
+      selectedCity = d.city;
+    }
+    if (d.state) {
+      document.getElementById('stateSelect').value = d.state;
+      selectedState = d.state;
+    }
+    if (d.city && d.state) updateCityPill();
+
+    // Work type
+    if (d.workType) setWorkType(d.workType);
+
+    // Purposes
+    if (d.purposes) {
+      const builtIn = ['Wedding','Rokha','Anniversary','Birthday','Pre-Wedding'];
+      d.purposes.forEach(p => {
+        if (builtIn.includes(p)) {
+          const btn = document.querySelector(`.purpose-btn[data-purpose="${p}"]`);
+          if (btn) btn.classList.add('active');
+        } else {
+          // custom tag
+          const tag = document.createElement('span');
+          tag.className = 'custom-tag';
+          tag.innerHTML = `${p} <span class="custom-tag-del" onclick="this.parentElement.remove()">✕</span>`;
+          document.getElementById('customTags').appendChild(tag);
+        }
+      });
+    }
+
+    // Add-ons
+    const ADDON_MAP = {
+      'tog-rush'   : 'Rush Editing (48 hrs)',
+      'tog-retouch': 'Extra Retouching',
+      'tog-video'  : 'Short Video Reel',
+      'tog-print'  : 'Print License',
+    };
+    if (d.addons) {
+      Object.entries(ADDON_MAP).forEach(([id, name]) => {
+        const tog = document.getElementById(id);
+        if (tog) {
+          if (d.addons.includes(name)) tog.classList.add('on');
+          else tog.classList.remove('on');
+        }
+      });
+    }
+  } catch(e) {}
+}
+
+/* ══════════════════════════════════════
+   INIT — wait for Google Maps API
+══════════════════════════════════════ */
+window.addEventListener('load', () => {
+  restoreDetails();
+  if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+    initMaps();
+  } else {
+    initMapsFallback();
+  }
+});
+</script>
+</body>
+</html>

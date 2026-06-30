@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lensly — Review & Pay</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+
+/* ── Progress ── */
+.progress-track { display:flex; gap:4px; padding:0 20px; margin-bottom:16px; }
+.progress-step  { flex:1; height:3px; border-radius:2px; background:var(--border); }
+.progress-step.done { background:var(--accent); }
+
+/* ── Photographer header ── */
+.phot-header {
+  display:flex; align-items:center; gap:12px;
+  background:linear-gradient(135deg,#1a150a,var(--surface));
+  border:1px solid var(--border); border-radius:var(--r-md);
+  padding:14px;
+}
+.phot-avatar { font-size:30px; }
+.phot-name   { font-family:var(--serif); font-size:18px; font-weight:400; }
+.phot-spec   { font-size:10px; color:var(--muted); margin-top:3px; letter-spacing:.5px; }
+
+/* ── Detail rows card ── */
+.detail-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); overflow:hidden; }
+.detail-row  { display:flex; align-items:flex-start; gap:10px; padding:11px 14px; border-bottom:1px solid var(--border); }
+.detail-row:last-child { border-bottom:none; }
+.detail-icon { font-size:15px; width:20px; text-align:center; flex-shrink:0; margin-top:1px; }
+.detail-body { flex:1; min-width:0; }
+.detail-lbl  { font-size:9px; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:3px; }
+.detail-val  { font-size:12px; color:var(--text); line-height:1.5; }
+.detail-sub  { font-size:10px; color:var(--muted); margin-top:2px; }
+
+/* ── Day schedule pills ── */
+.day-pills { display:flex; flex-direction:column; gap:5px; margin-top:4px; }
+.day-pill {
+  display:flex; align-items:center; justify-content:space-between;
+  border:1px solid var(--border); border-radius:var(--r-sm);
+  padding:7px 10px; font-size:11px;
+}
+.day-pill-date { font-weight:500; }
+.day-pill-time { font-size:10px; color:var(--muted); }
+.pkg-badge {
+  font-size:9px; letter-spacing:.5px; padding:3px 8px;
+  border-radius:99px; flex-shrink:0;
+}
+.pkg-half { background:#2a1e08; color:var(--accent); border:1px solid #3a2e18; }
+.pkg-full { background:var(--accent); color:#0d0d0d; }
+.day-pill-price { font-family:var(--serif); font-size:13px; color:var(--accent); }
+
+/* ── Cost breakdown ── */
+.cost-block { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:14px; }
+.cost-row   { display:flex; justify-content:space-between; align-items:center; padding:5px 0; font-size:12px; }
+.cost-label { color:var(--muted); }
+.cost-val   { font-family:var(--mono); color:var(--text); }
+.cost-divider { border:none; border-top:1px solid var(--border); margin:8px 0; }
+.cost-total {
+  display:flex; justify-content:space-between; align-items:baseline;
+  padding-top:8px;
+}
+.cost-total .ct-label { font-size:14px; color:var(--text); font-weight:500; }
+.cost-total .ct-val   { font-family:var(--serif); font-size:24px; color:var(--accent); }
+
+/* ── GST note ── */
+.gst-note { font-size:9px; color:var(--muted); margin-top:6px; text-align:right; }
+
+/* ── Cancellation box ── */
+.cancel-box {
+  border-radius:var(--r-sm); padding:12px 14px;
+  font-size:11px; line-height:1.7;
+}
+.cancel-free {
+  background:#0f1a12; border:1px solid #1e4030; color:var(--success);
+}
+.cancel-fee {
+  background:#1a0f08; border:1px solid #3a2010; color:#c9845a;
+}
+.cancel-title { font-weight:500; margin-bottom:4px; font-size:12px; }
+.cancel-date  { color:var(--accent); font-weight:500; }
+.cancel-policy-row {
+  display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px;
+}
+.cancel-policy-item {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-sm); padding:9px 10px; font-size:10px;
+}
+.cpi-label { color:var(--muted); font-size:9px; letter-spacing:.5px; margin-bottom:3px; }
+.cpi-val   { font-weight:500; }
+.cpi-val.free { color:var(--success); }
+.cpi-val.fee  { color:#c9845a; }
+
+/* ── Payment method ── */
+.payment-row {
+  display:flex; align-items:center; gap:12px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-sm); padding:12px 14px;
+  cursor:pointer; transition:border-color .2s;
+}
+.payment-row:hover { border-color:var(--border-hi); }
+.card-icon {
+  width:38px; height:25px;
+  background:linear-gradient(135deg,#1a3a6b,#2352a0);
+  border-radius:4px; display:flex; align-items:center;
+  justify-content:center; font-size:10px; color:white; letter-spacing:.5px;
+}
+.card-name { font-size:12px; }
+.card-num  { font-size:10px; color:var(--muted); margin-top:2px; letter-spacing:1px; }
+
+/* ── Book button ── */
+.book-btn {
+  display:block; width:100%; padding:16px;
+  background:var(--accent); color:#0d0d0d;
+  border:none; border-radius:var(--r-sm);
+  font-family:var(--mono); font-size:12px;
+  letter-spacing:2px; text-transform:uppercase;
+  cursor:pointer; transition:background .2s;
+  text-align:center; text-decoration:none;
+}
+.book-btn:hover { background:var(--accent2); }
+
+/* ── Edit link ── */
+.edit-link {
+  font-size:10px; color:var(--accent); letter-spacing:1px;
+  text-decoration:none; text-transform:uppercase;
+}
+.edit-link:hover { color:var(--accent2); }
+
+</style>
+</head>
+<body>
+<div class="shell"><div class="phone">
+
+  <div class="status-bar">
+    <span class="time">9:49</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+
+  <div class="top-nav">
+    <a href="04-details.html" class="back-btn">←</a>
+    <span class="nav-title">Review & Pay</span>
+    <span class="nav-action" style="color:var(--muted)">Step 3 of 3</span>
+  </div>
+
+  <div class="progress-track">
+    <div class="progress-step done"></div>
+    <div class="progress-step done"></div>
+    <div class="progress-step done"></div>
+  </div>
+
+  <div class="content">
+
+    <!-- ── Photographer ── -->
+    <div class="phot-header fade-up">
+      <div class="phot-avatar" id="photAvatar">📷</div>
+      <div>
+        <div class="phot-name" id="photName">Sofia Reyes</div>
+        <div class="phot-spec" id="photSpec">PORTRAIT · EDITORIAL · WEDDING</div>
+        <div class="stars mt-4" style="font-size:12px">★★★★★ <span style="font-size:10px;color:var(--muted)" id="photRating">4.9</span></div>
+      </div>
+      <a href="02-profile.html" class="edit-link" style="margin-left:auto;align-self:flex-start">Change</a>
+    </div>
+
+    <!-- ── Booking Details ── -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px" class="fade-up-2">
+      <p class="section-label" style="margin:0">Booking Details</p>
+      <a href="03-datetime.html" class="edit-link">Edit Days</a>
+    </div>
+
+    <div class="detail-card mt-8 fade-up-2">
+
+      <!-- Booked days with per-day type -->
+      <div class="detail-row">
+        <span class="detail-icon">📅</span>
+        <div class="detail-body">
+          <div class="detail-lbl">Shoot Schedule</div>
+          <div class="day-pills" id="dayPillsContainer">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Location -->
+      <div class="detail-row">
+        <span class="detail-icon">📍</span>
+        <div class="detail-body">
+          <div class="detail-lbl">Shoot Location</div>
+          <div class="detail-val" id="reviewLocation">—</div>
+          <div class="detail-sub" id="reviewCity">—</div>
+        </div>
+        <a href="04-details.html" class="edit-link" style="flex-shrink:0;align-self:center">Edit</a>
+      </div>
+
+      <!-- Work type -->
+      <div class="detail-row">
+        <span class="detail-icon">🗺</span>
+        <div class="detail-body">
+          <div class="detail-lbl">Booking Type</div>
+          <div class="detail-val" id="reviewWorkType">Local Shoot</div>
+        </div>
+      </div>
+
+      <!-- Assembly point (outstation) -->
+      <div class="detail-row" id="assemblyRow" style="display:none">
+        <span class="detail-icon">🏁</span>
+        <div class="detail-body">
+          <div class="detail-lbl">Assembly / Meeting Point</div>
+          <div class="detail-val" id="reviewAssembly">—</div>
+        </div>
+      </div>
+
+      <!-- Shoot purpose -->
+      <div class="detail-row">
+        <span class="detail-icon">🎯</span>
+        <div class="detail-body">
+          <div class="detail-lbl">Shoot Purpose</div>
+          <div class="detail-val" id="reviewPurpose">—</div>
+        </div>
+        <a href="04-details.html" class="edit-link" style="flex-shrink:0;align-self:center">Edit</a>
+      </div>
+
+      <!-- Add-ons -->
+      <div class="detail-row" id="addonsRow">
+        <span class="detail-icon">✨</span>
+        <div class="detail-body">
+          <div class="detail-lbl">Add-ons</div>
+          <div class="detail-val" id="reviewAddons">None</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Cost Breakdown ── -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px" class="fade-up-3">
+      <p class="section-label" style="margin:0">Cost Breakdown</p>
+    </div>
+
+    <div class="cost-block mt-8 fade-up-3" id="costBlock">
+      <!-- Populated by JS -->
+    </div>
+
+    <!-- ── Cancellation Policy ── -->
+    <p class="section-label mt-16 fade-up-4">Cancellation Policy</p>
+    <div id="cancelBox" class="cancel-box cancel-free fade-up-4">
+      <!-- Populated by JS -->
+    </div>
+    <div class="cancel-policy-row fade-up-4">
+      <div class="cancel-policy-item">
+        <div class="cpi-label">BEFORE DEADLINE</div>
+        <div class="cpi-val free">100% Refund</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:3px">Full amount returned</div>
+      </div>
+      <div class="cancel-policy-item">
+        <div class="cpi-label">AFTER DEADLINE</div>
+        <div class="cpi-val fee">25% Charge</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:3px">Of total booking value</div>
+      </div>
+    </div>
+
+    <!-- ── Payment Method ── -->
+    <p class="section-label mt-16 fade-up-4">Payment Method</p>
+    <div class="payment-row fade-up-4">
+      <div class="card-icon">VISA</div>
+      <div>
+        <div class="card-name">Personal Visa</div>
+        <div class="card-num">···· ···· ···· 4242</div>
+      </div>
+      <span style="font-size:10px;color:var(--accent);letter-spacing:1px;margin-left:auto">CHANGE</span>
+    </div>
+
+    <!-- ── Book & Pay button ── -->
+    <a href="06-confirm.html" class="book-btn mt-16 fade-up-5" id="bookBtn">
+      BOOK &amp; PAY ₹—
+    </a>
+    <div style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:10px;color:var(--muted);margin-top:8px" class="fade-up-5">
+      <span>🔒</span><span>Secured by 256-bit SSL encryption</span>
+    </div>
+    <p style="font-size:10px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.6;padding-bottom:4px" class="fade-up-5">
+      By booking you agree to Lensly <a href="#" style="color:var(--accent)">Terms of Service</a> and <a href="#" style="color:var(--accent)">Cancellation Policy</a>
+    </p>
+
+    <div style="height:24px"></div>
+  </div>
+</div></div>
+
+<script>
+/* ══════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════ */
+const HALF_PRICE = 17280;
+const FULL_PRICE = 34560;
+const GST_RATE   = 0.18;
+
+function fmt(n) { return '₹' + n.toLocaleString('en-IN'); }
+
+function parseTime(t) {
+  // t = "09:00" → "9:00 AM"
+  if (!t) return '—';
+  const [hh, mm] = t.split(':').map(Number);
+  const ap = hh >= 12 ? 'PM' : 'AM';
+  const h  = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
+  return `${h}:${String(mm).padStart(2,'0')} ${ap}`;
+}
+
+function endTime(startStr, hrs) {
+  if (!startStr) return '—';
+  const [hh, mm] = startStr.split(':').map(Number);
+  const endH = hh + hrs;
+  const ap   = endH >= 12 ? 'PM' : 'AM';
+  const h    = endH === 0 ? 12 : endH > 12 ? endH - 12 : endH;
+  return `${h}:${String(mm).padStart(2,'0')} ${ap}`;
+}
+
+/* ══════════════════════════════════════════════
+   LOAD DATA FROM sessionStorage / localStorage
+   (saved by previous pages — falls back to demo)
+══════════════════════════════════════════════ */
+function loadBookingData() {
+
+  // ── Days (from 03-datetime.html) ──
+  // Expected format stored by 03: JSON string of selections object
+  // { "2026-05-21": { type:"half", startTime:"09:00", label:"Wed, 21 May" }, ... }
+  let selections = {};
+  try {
+    const raw = sessionStorage.getItem('lensly_days') || localStorage.getItem('lensly_days');
+    if (raw) selections = JSON.parse(raw);
+  } catch(e) {}
+
+  // Demo fallback if nothing stored
+  if (Object.keys(selections).length === 0) {
+    selections = {
+      '2026-05-21': { type:'half', startTime:'09:00', label:'Wed, 21 May' },
+      '2026-05-22': { type:'half', startTime:'10:00', label:'Thu, 22 May' },
+      '2026-05-24': { type:'full', startTime:'08:00', label:'Sat, 24 May' },
+    };
+  }
+
+  // ── Details (from 04-details.html) ──
+  let details = {};
+  try {
+    const raw = sessionStorage.getItem('lensly_details') || localStorage.getItem('lensly_details');
+    if (raw) details = JSON.parse(raw);
+  } catch(e) {}
+
+  // Demo fallback
+  if (!details.city) {
+    details = {
+      city       : 'Mumbai',
+      state      : 'Maharashtra',
+      workType   : 'local',
+      location   : 'Juhu Beach, Mumbai',
+      assembly   : '',
+      purposes   : ['Wedding'],
+      addons     : ['Extra Retouching'],
+      addonCosts : { 'Extra Retouching': 2880 },
+    };
+  }
+
+  return { selections, details };
+}
+
+/* ══════════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════════ */
+function render() {
+  const { selections, details } = loadBookingData();
+  const sortedKeys = Object.keys(selections).sort();
+
+  /* ─ Photographer from session ─ */
+  let phot = { name:'Sofia Reyes', speciality:'Portrait · Editorial · Wedding', rating:'4.9', avatar:'📷' };
+  try {
+    const raw = sessionStorage.getItem('lensly_photographer');
+    if (raw) phot = { ...phot, ...JSON.parse(raw) };
+  } catch(e) {}
+  const photNameEl = document.getElementById('photName');
+  const photSpecEl = document.getElementById('photSpec');
+  const photAvEl   = document.getElementById('photAvatar');
+  if (photNameEl) photNameEl.textContent = phot.name;
+  if (photSpecEl) photSpecEl.textContent = phot.speciality;
+  if (photAvEl)   photAvEl.textContent   = phot.avatar;
+
+  /* ─ Day pills ─ */
+  const pillsContainer = document.getElementById('dayPillsContainer');
+  pillsContainer.innerHTML = '';
+  let halfCount = 0, fullCount = 0;
+
+  sortedKeys.forEach(key => {
+    const s = selections[key];
+    const hrs   = s.type === 'half' ? 6 : 12;
+    const price = s.type === 'half' ? HALF_PRICE : FULL_PRICE;
+    if (s.type === 'half') halfCount++; else fullCount++;
+
+    const start = parseTime(s.startTime);
+    const end   = endTime(s.startTime, hrs);
+
+    const pill = document.createElement('div');
+    pill.className = 'day-pill';
+    pill.innerHTML = `
+      <div>
+        <div class="day-pill-date">${s.label}</div>
+        <div class="day-pill-time">${start} – ${end} · ${hrs} hrs</div>
+      </div>
+      <span class="pkg-badge ${s.type === 'half' ? 'pkg-half' : 'pkg-full'}">
+        ${s.type === 'half' ? 'Half Day' : 'Full Day'}
+      </span>
+      <div class="day-pill-price">${fmt(price)}</div>
+    `;
+    pillsContainer.appendChild(pill);
+  });
+
+  /* ─ Location ─ */
+  const locMain = details.location || 'To be confirmed';
+  const locSub  = details.locationAddress || '';
+  document.getElementById('reviewLocation').textContent = locMain;
+  const cityLine = details.city && details.state ? `${details.city}, ${details.state}` : '';
+  document.getElementById('reviewCity').textContent =
+    [locSub, cityLine].filter(Boolean).join(' · ') || '—';
+
+  /* ─ Work type ─ */
+  document.getElementById('reviewWorkType').textContent =
+    details.workType === 'outstation' ? '✈️ Outstation — Travel required' : '🏘 Local Shoot';
+
+  /* ─ Assembly ─ */
+  if (details.workType === 'outstation' && details.assembly) {
+    document.getElementById('assemblyRow').style.display = 'flex';
+    document.getElementById('reviewAssembly').textContent = details.assembly;
+  }
+
+  /* ─ Purpose ─ */
+  document.getElementById('reviewPurpose').textContent =
+    (details.purposes && details.purposes.length)
+      ? details.purposes.join(', ')
+      : 'Not specified';
+
+  /* ─ Add-ons ─ */
+  const addonsEl = document.getElementById('reviewAddons');
+  if (details.addons && details.addons.length) {
+    addonsEl.innerHTML = details.addons.map(a =>
+      `<div style="margin-bottom:2px">${a}
+        ${details.addonCosts && details.addonCosts[a]
+          ? `<span style="color:var(--accent);float:right">+${fmt(details.addonCosts[a])}</span>`
+          : ''}
+      </div>`
+    ).join('');
+  } else {
+    addonsEl.textContent = 'None';
+  }
+
+  /* ─ Cost Breakdown ─ */
+  const halfSubtotal  = halfCount * HALF_PRICE;
+  const fullSubtotal  = fullCount * FULL_PRICE;
+  let   addonTotal    = 0;
+  if (details.addonCosts) {
+    Object.values(details.addonCosts).forEach(v => addonTotal += v);
+  }
+  const baseTotal = halfSubtotal + fullSubtotal + addonTotal;
+  const gst       = Math.round(baseTotal * GST_RATE);
+  const grandTotal = baseTotal + gst;
+
+  const costBlock = document.getElementById('costBlock');
+  let costHTML = '';
+
+  if (halfCount > 0) {
+    costHTML += `
+      <div class="cost-row">
+        <span class="cost-label">Half Day × ${halfCount} <span style="font-size:9px">(6 hrs each)</span></span>
+        <span class="cost-val">${fmt(halfSubtotal)}</span>
+      </div>`;
+  }
+  if (fullCount > 0) {
+    costHTML += `
+      <div class="cost-row">
+        <span class="cost-label">Full Day × ${fullCount} <span style="font-size:9px">(12 hrs each)</span></span>
+        <span class="cost-val">${fmt(fullSubtotal)}</span>
+      </div>`;
+  }
+  if (addonTotal > 0 && details.addons) {
+    details.addons.forEach(a => {
+      const c = details.addonCosts && details.addonCosts[a];
+      if (c) costHTML += `
+        <div class="cost-row">
+          <span class="cost-label">${a}</span>
+          <span class="cost-val">+${fmt(c)}</span>
+        </div>`;
+    });
+  }
+  costHTML += `<hr class="cost-divider">`;
+  costHTML += `
+    <div class="cost-row">
+      <span class="cost-label">GST (18%)</span>
+      <span class="cost-val">${fmt(gst)}</span>
+    </div>
+    <hr class="cost-divider">
+    <div class="cost-total">
+      <span class="ct-label">Total</span>
+      <span class="ct-val">${fmt(grandTotal)}</span>
+    </div>
+    <div class="gst-note">* Inclusive of 18% GST</div>
+  `;
+  costBlock.innerHTML = costHTML;
+
+  /* ─ Update Book button ─ */
+  document.getElementById('bookBtn').textContent = `BOOK & PAY ${fmt(grandTotal)}`;
+  // Save total for confirm page
+  try { sessionStorage.setItem('lensly_total', grandTotal); } catch(e) {}
+
+  /* ─ Cancellation policy ─ */
+  renderCancellation(sortedKeys, selections, grandTotal);
+}
+
+/* ══════════════════════════════════════════════
+   CANCELLATION — 10 days before first shoot date
+══════════════════════════════════════════════ */
+function renderCancellation(sortedKeys, selections, grandTotal) {
+  // First shoot date
+  const firstKey  = sortedKeys[0];
+  let shootDate;
+
+  if (firstKey) {
+    const [y, m, d] = firstKey.split('-').map(Number);
+    shootDate = new Date(y, m - 1, d);
+  } else {
+    shootDate = new Date();
+    shootDate.setDate(shootDate.getDate() + 30); // fallback
+  }
+
+  // Free cancellation deadline = 10 days before shoot
+  const deadline = new Date(shootDate);
+  deadline.setDate(deadline.getDate() - 10);
+
+  const now   = new Date();
+  const isFree = now <= deadline;
+
+  // Format deadline
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const monNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const ddLabel  = `${dayNames[deadline.getDay()]}, ${deadline.getDate()} ${monNames[deadline.getMonth()]} ${deadline.getFullYear()}`;
+
+  const penaltyAmt = Math.round(grandTotal * 0.25);
+  const box = document.getElementById('cancelBox');
+
+  if (isFree) {
+    box.className = 'cancel-box cancel-free fade-up-4';
+    box.innerHTML = `
+      <div class="cancel-title">✅ Free Cancellation Available</div>
+      <div>Cancel before <span class="cancel-date">${ddLabel}</span> (midnight) for a full refund.</div>
+      <div style="margin-top:6px;font-size:10px;color:var(--muted)">
+        After this date, a cancellation fee of <strong style="color:#c9845a">${fmt(penaltyAmt)}</strong> (25%) will be charged.
+      </div>
+    `;
+  } else {
+    box.className = 'cancel-box cancel-fee fade-up-4';
+    box.innerHTML = `
+      <div class="cancel-title">⚠️ Cancellation Fee Applies</div>
+      <div>The free cancellation window (<span class="cancel-date">${ddLabel}</span>) has passed.</div>
+      <div style="margin-top:6px">Cancelling now will charge <strong>${fmt(penaltyAmt)}</strong> (25% of total).</div>
+    `;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   SAVE DATA HELPER — called by previous pages
+   (include this logic in 03 & 04 too)
+══════════════════════════════════════════════ */
+// Demo: auto-save sample data so this page works standalone
+function saveDemoData() {
+  const demoSelections = {
+    '2026-05-21': { type:'half', startTime:'09:00', label:'Wed, 21 May' },
+    '2026-05-22': { type:'half', startTime:'10:00', label:'Thu, 22 May' },
+    '2026-05-24': { type:'full', startTime:'08:00', label:'Sat, 24 May' },
+  };
+  const demoDetails = {
+    city:'Mumbai', state:'Maharashtra',
+    workType:'local',
+    location:'Juhu Beach, Mumbai',
+    assembly:'',
+    purposes:['Wedding'],
+    addons:['Extra Retouching'],
+    addonCosts:{ 'Extra Retouching': 2880 },
+  };
+  try {
+    sessionStorage.setItem('lensly_days',    JSON.stringify(demoSelections));
+    sessionStorage.setItem('lensly_details', JSON.stringify(demoDetails));
+  } catch(e) {}
+}
+
+// Run on load
+saveDemoData();
+render();
+</script>
+</body>
+</html>

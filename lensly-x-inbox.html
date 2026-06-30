@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lensly X — Booking Requests</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+
+/* ── Lensly X Brand Header ── */
+.brand-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 20px;
+}
+.brand-mark {
+  display:flex; align-items:baseline; gap:4px;
+  font-family:var(--serif); font-size:15px; letter-spacing:1px;
+}
+.brand-mark .lensly { color:var(--muted); font-weight:300; }
+.brand-mark .x {
+  color:var(--accent); font-weight:600; font-size:17px;
+  border:1px solid var(--accent); border-radius:4px;
+  padding:0px 6px; line-height:1.5; margin-left:2px;
+}
+.brand-sub {
+  font-size:8px; color:var(--muted); letter-spacing:2px;
+  text-transform:uppercase; margin-top:1px;
+}
+
+/* ── Header ── */
+.inbox-header { padding:14px 20px 0; }
+.inbox-title-row { display:flex; align-items:center; justify-content:space-between; }
+.inbox-name { font-size:11px; color:var(--muted); letter-spacing:.5px; }
+.inbox-bell {
+  width:38px; height:38px; border-radius:50%;
+  border:1px solid var(--border); display:flex; align-items:center; justify-content:center;
+  font-size:16px; position:relative; cursor:pointer; transition:border-color .2s;
+}
+.inbox-bell:hover { border-color:var(--accent); }
+.inbox-bell .dot {
+  position:absolute; top:6px; right:7px;
+  width:8px; height:8px; background:var(--accent); border-radius:50%;
+  border:1.5px solid var(--bg);
+}
+
+/* ── Stat strip ── */
+.stat-strip { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; border:1px solid var(--border); border-radius:var(--r-md); overflow:hidden; margin-top:14px; }
+.stat-cell { padding:11px 8px; text-align:center; border-right:1px solid var(--border); }
+.stat-cell:last-child { border-right:none; }
+.stat-cell .sv { font-family:var(--serif); font-size:20px; color:var(--accent); }
+.stat-cell .sl { font-size:8.5px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-top:2px; }
+
+/* ── Filter tabs ── */
+.tab-row { display:flex; gap:0; margin-top:14px; border:1px solid var(--border); border-radius:var(--r-sm); overflow:hidden; }
+.tab-btn {
+  flex:1; padding:9px 4px; text-align:center; font-size:10px;
+  letter-spacing:.5px; color:var(--muted); cursor:pointer;
+  border-right:1px solid var(--border); transition:all .15s; background:var(--surface);
+  position:relative;
+}
+.tab-btn:last-child { border-right:none; }
+.tab-btn.active { background:var(--surface2); color:var(--accent); }
+.tab-btn .tab-count {
+  display:inline-block; background:var(--border); border-radius:99px;
+  font-size:8px; padding:1px 5px; margin-left:4px;
+}
+.tab-btn.active .tab-count { background:var(--accent); color:#0d0d0d; }
+
+/* ── Day group label ── */
+.day-group-label {
+  font-size:9px; color:var(--muted); letter-spacing:1.5px;
+  text-transform:uppercase; margin:18px 0 8px;
+}
+
+/* ── Request card ── */
+.req-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-md); overflow:hidden;
+  transition:all .25s;
+}
+.req-card + .req-card { margin-top:10px; }
+.req-card.is-new { border-color:#3a2e18; }
+.req-card.removing { opacity:0; transform:translateX(30px); }
+
+.req-top {
+  display:flex; gap:11px; align-items:flex-start;
+  padding:13px 14px 10px;
+}
+.req-avatar {
+  width:42px; height:42px; border-radius:50%;
+  background:var(--surface2); border:1px solid var(--border-hi);
+  display:flex; align-items:center; justify-content:center;
+  font-size:17px; flex-shrink:0;
+}
+.req-info { flex:1; min-width:0; }
+.req-client { font-family:var(--serif); font-size:15px; line-height:1.2; }
+.req-meta { font-size:9.5px; color:var(--muted); margin-top:2px; }
+.req-status-pill {
+  font-size:8px; letter-spacing:1px; text-transform:uppercase;
+  padding:3px 8px; border-radius:99px; flex-shrink:0; white-space:nowrap;
+}
+.pill-new       { background:#2a1e08; color:var(--accent); border:1px solid #3a2e18; }
+.pill-confirmed { background:#0f2a18; color:var(--success); border:1px solid #1e4030; }
+.pill-completed { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
+.pill-declined  { background:#1e1010; color:#8a4a3a; border:1px solid #3a2020; }
+
+/* ── Body details ── */
+.req-body { padding:0 14px 12px; display:flex; flex-direction:column; gap:7px; }
+.req-detail-row { display:flex; align-items:center; gap:8px; font-size:11px; color:var(--text); }
+.req-detail-row .ic { font-size:13px; width:18px; text-align:center; flex-shrink:0; }
+.req-detail-row .muted { color:var(--muted); }
+.req-price {
+  font-family:var(--serif); font-size:18px; color:var(--accent);
+  margin-left:auto; flex-shrink:0;
+}
+
+/* ── Action row ── */
+.req-actions { display:flex; gap:8px; padding:0 14px 14px; }
+.act-btn {
+  flex:1; padding:11px; border-radius:var(--r-sm);
+  font-family:var(--mono); font-size:10px; letter-spacing:1.5px;
+  text-transform:uppercase; cursor:pointer; transition:all .2s;
+  border:none; text-align:center;
+}
+.act-accept { background:var(--accent); color:#0d0d0d; }
+.act-accept:hover { background:var(--accent2); }
+.act-decline { background:transparent; border:1px solid var(--border-hi); color:var(--muted); }
+.act-decline:hover { border-color:var(--danger); color:var(--danger); }
+
+/* Secondary actions for confirmed/completed cards */
+.req-actions.secondary .act-btn { background:transparent; border:1px solid var(--border); color:var(--text); }
+.req-actions.secondary .act-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+/* ── Expand / detail toggle ── */
+.req-expand-toggle {
+  text-align:center; font-size:9.5px; color:var(--muted);
+  padding:8px 0; border-top:1px solid var(--border); cursor:pointer;
+  letter-spacing:.5px; transition:color .2s;
+}
+.req-expand-toggle:hover { color:var(--accent); }
+.req-extra {
+  display:none; padding:0 14px 14px; font-size:10.5px; color:var(--muted); line-height:1.7;
+  border-top:1px solid var(--border); padding-top:10px;
+}
+.req-extra.show { display:block; }
+.req-extra .ex-row { display:flex; justify-content:space-between; padding:3px 0; }
+.req-extra .ex-row span:last-child { color:var(--text); }
+
+/* ── Empty state ── */
+.empty-state {
+  text-align:center; padding:50px 20px; color:var(--muted);
+}
+.empty-state .es-icon { font-size:40px; opacity:.3; margin-bottom:10px; }
+.empty-state .es-text { font-size:12px; line-height:1.7; }
+
+/* ── Toast ── */
+.toast {
+  position:fixed; top:60px; left:50%; transform:translateX(-50%) translateY(-20px);
+  background:var(--success); color:white; border-radius:var(--r-sm);
+  padding:10px 18px; font-size:11px; letter-spacing:.5px;
+  white-space:nowrap; opacity:0; pointer-events:none; transition:all .3s; z-index:200;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.decline { background:var(--danger); }
+
+</style>
+</head>
+<body>
+<div class="shell"><div class="phone">
+
+  <div class="status-bar">
+    <span class="time">9:30</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+
+  <!-- Lensly X brand strip -->
+  <div class="brand-row fade-up">
+    <div>
+      <div class="brand-mark"><span class="lensly">LENSLY</span><span class="x">X</span></div>
+      <div class="brand-sub">For Freelance Professionals</div>
+    </div>
+    <a href="lensly-x-profile.html" style="font-size:9px;color:var(--muted);letter-spacing:1px;text-decoration:none;text-transform:uppercase">← Profile</a>
+  </div>
+
+  <!-- Header -->
+  <div class="inbox-header fade-up-2">
+    <div class="inbox-title-row">
+      <div>
+        <p class="inbox-name">SOFIA REYES</p>
+        <h1 class="heading" style="margin-top:2px">Booking Requests</h1>
+      </div>
+      <div class="inbox-bell">
+        🔔
+        <div class="dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Stat strip -->
+    <div class="stat-strip fade-up-2">
+      <div class="stat-cell">
+        <div class="sv" id="statNew">3</div>
+        <div class="sl">New</div>
+      </div>
+      <div class="stat-cell">
+        <div class="sv" id="statConfirmed">2</div>
+        <div class="sl">Confirmed</div>
+      </div>
+      <div class="stat-cell">
+        <div class="sv">₹68k</div>
+        <div class="sl">This Month</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-row fade-up-2">
+      <div class="tab-btn active" data-tab="new" onclick="switchTab(this)">New <span class="tab-count" id="tabCountNew">3</span></div>
+      <div class="tab-btn" data-tab="confirmed" onclick="switchTab(this)">Confirmed <span class="tab-count" id="tabCountConfirmed">2</span></div>
+      <div class="tab-btn" data-tab="all" onclick="switchTab(this)">All</div>
+    </div>
+
+    <!-- ════════════ TODAY ════════════ -->
+    <div class="day-group-label fade-up-3" data-group="today">Today</div>
+
+    <!-- Request 1 — NEW -->
+    <div class="req-card is-new fade-up-3" data-status="new" data-id="r1">
+      <div class="req-top" style="cursor:pointer" onclick="window.location.href='lensly-x-booking-detail.html'">
+        <div class="req-avatar">👰</div>
+        <div class="req-info">
+          <div class="req-client">Ananya Sharma</div>
+          <div class="req-meta">Requested 12 min ago</div>
+        </div>
+        <span class="req-status-pill pill-new">New</span>
+      </div>
+      <div class="req-body">
+        <div class="req-detail-row"><span class="ic">📅</span><span>Sat, 12 Jul · 9:00 AM</span></div>
+        <div class="req-detail-row"><span class="ic">☀️</span><span>Full Day <span class="muted">(12 hrs)</span></span><span class="req-price">₹34,560</span></div>
+        <div class="req-detail-row"><span class="ic">📍</span><span class="muted">Taj Lands End, Mumbai</span></div>
+        <div class="req-detail-row"><span class="ic">🎯</span><span class="muted">Wedding</span></div>
+      </div>
+      <div class="req-actions">
+        <button class="act-btn act-decline" onclick="declineReq('r1', this)">Decline</button>
+        <button class="act-btn act-accept" onclick="acceptReq('r1', this)">Accept Booking</button>
+      </div>
+    </div>
+
+    <!-- Request 2 — NEW -->
+    <div class="req-card is-new fade-up-4" data-status="new" data-id="r2">
+      <div class="req-top">
+        <div class="req-avatar">🎂</div>
+        <div class="req-info">
+          <div class="req-client">Rohan Mehta</div>
+          <div class="req-meta">Requested 1 hr ago</div>
+        </div>
+        <span class="req-status-pill pill-new">New</span>
+      </div>
+      <div class="req-body">
+        <div class="req-detail-row"><span class="ic">📅</span><span>Sun, 13 Jul · 4:00 PM</span></div>
+        <div class="req-detail-row"><span class="ic">🌤</span><span>Half Day <span class="muted">(6 hrs)</span></span><span class="req-price">₹17,280</span></div>
+        <div class="req-detail-row"><span class="ic">📍</span><span class="muted">Bandra, Mumbai</span></div>
+        <div class="req-detail-row"><span class="ic">🎯</span><span class="muted">Birthday</span></div>
+      </div>
+      <div class="req-actions">
+        <button class="act-btn act-decline" onclick="declineReq('r2', this)">Decline</button>
+        <button class="act-btn act-accept" onclick="acceptReq('r2', this)">Accept Booking</button>
+      </div>
+    </div>
+
+    <!-- ════════════ THIS WEEK ════════════ -->
+    <div class="day-group-label fade-up-4" data-group="week">This Week</div>
+
+    <!-- Request 3 — NEW -->
+    <div class="req-card is-new fade-up-5" data-status="new" data-id="r3">
+      <div class="req-top">
+        <div class="req-avatar">🤝</div>
+        <div class="req-info">
+          <div class="req-client">Kavita &amp; Family</div>
+          <div class="req-meta">Requested yesterday</div>
+        </div>
+        <span class="req-status-pill pill-new">New</span>
+      </div>
+      <div class="req-body">
+        <div class="req-detail-row"><span class="ic">📅</span><span>Wed, 16 Jul · 11:00 AM</span></div>
+        <div class="req-detail-row"><span class="ic">🌤</span><span>Half Day <span class="muted">(6 hrs)</span></span><span class="req-price">₹17,280</span></div>
+        <div class="req-detail-row"><span class="ic">📍</span><span class="muted">Andheri, Mumbai</span></div>
+        <div class="req-detail-row"><span class="ic">🎯</span><span class="muted">Rokha</span></div>
+      </div>
+      <div class="req-actions">
+        <button class="act-btn act-decline" onclick="declineReq('r3', this)">Decline</button>
+        <button class="act-btn act-accept" onclick="acceptReq('r3', this)">Accept Booking</button>
+      </div>
+    </div>
+
+    <!-- Request 4 — CONFIRMED -->
+    <div class="req-card fade-up-5" data-status="confirmed" data-id="r4">
+      <div class="req-top">
+        <div class="req-avatar">💍</div>
+        <div class="req-info">
+          <div class="req-client">Priya &amp; Arjun</div>
+          <div class="req-meta">Confirmed 2 days ago</div>
+        </div>
+        <span class="req-status-pill pill-confirmed">Confirmed</span>
+      </div>
+      <div class="req-body">
+        <div class="req-detail-row"><span class="ic">📅</span><span>Fri, 18 Jul · 8:00 AM</span></div>
+        <div class="req-detail-row"><span class="ic">☀️</span><span>Full Day <span class="muted">(12 hrs)</span></span><span class="req-price">₹34,560</span></div>
+        <div class="req-detail-row"><span class="ic">📍</span><span class="muted">ITC Maratha, Mumbai</span></div>
+        <div class="req-detail-row"><span class="ic">🎯</span><span class="muted">Pre-Wedding</span></div>
+      </div>
+      <div class="req-actions secondary">
+        <button class="act-btn">💬 Message</button>
+        <button class="act-btn">📍 Directions</button>
+      </div>
+      <div class="req-expand-toggle" onclick="toggleExtra(this)">View full details ▾</div>
+      <div class="req-extra">
+        <div class="ex-row"><span>Booking ID</span><span>LNS-88213</span></div>
+        <div class="ex-row"><span>Client phone</span><span>+91 98XXX XXX12</span></div>
+        <div class="ex-row"><span>Outfits planned</span><span>3</span></div>
+        <div class="ex-row"><span>Special note</span><span>Need drone for entry shot</span></div>
+        <div class="ex-row"><span>Cancellation</span><span>Free until 8 Jul</span></div>
+      </div>
+    </div>
+
+    <!-- ════════════ EARLIER ════════════ -->
+    <div class="day-group-label fade-up-5" data-group="earlier">Earlier</div>
+
+    <!-- Request 5 — CONFIRMED -->
+    <div class="req-card fade-up-5" data-status="confirmed" data-id="r5">
+      <div class="req-top">
+        <div class="req-avatar">📷</div>
+        <div class="req-info">
+          <div class="req-client">Vikram Joshi</div>
+          <div class="req-meta">Confirmed 5 days ago</div>
+        </div>
+        <span class="req-status-pill pill-confirmed">Confirmed</span>
+      </div>
+      <div class="req-body">
+        <div class="req-detail-row"><span class="ic">📅</span><span>Mon, 7 Jul · 10:00 AM</span></div>
+        <div class="req-detail-row"><span class="ic">🌤</span><span>Half Day <span class="muted">(6 hrs)</span></span><span class="req-price">₹17,280</span></div>
+        <div class="req-detail-row"><span class="ic">📍</span><span class="muted">Powai, Mumbai</span></div>
+        <div class="req-detail-row"><span class="ic">🎯</span><span class="muted">Anniversary</span></div>
+      </div>
+      <div class="req-actions secondary">
+        <button class="act-btn">💬 Message</button>
+        <button class="act-btn">📍 Directions</button>
+      </div>
+    </div>
+
+    <!-- Request 6 — COMPLETED -->
+    <div class="req-card fade-up-5" data-status="all-only" data-id="r6">
+      <div class="req-top">
+        <div class="req-avatar">🎉</div>
+        <div class="req-info">
+          <div class="req-client">Meera Iyer</div>
+          <div class="req-meta">Shoot completed · 12 Jun</div>
+        </div>
+        <span class="req-status-pill pill-completed">Completed</span>
+      </div>
+      <div class="req-body">
+        <div class="req-detail-row"><span class="ic">☀️</span><span>Full Day <span class="muted">(12 hrs)</span></span><span class="req-price">₹34,560</span></div>
+        <div class="req-detail-row"><span class="ic">📍</span><span class="muted">Lonavala</span></div>
+      </div>
+      <div class="req-actions secondary">
+        <button class="act-btn">⭐ View Review</button>
+        <button class="act-btn">🧾 Receipt</button>
+      </div>
+    </div>
+
+    <!-- Empty state (hidden by default, shown when a tab has no items) -->
+    <div class="empty-state" id="emptyState" style="display:none">
+      <div class="es-icon">📭</div>
+      <div class="es-text">Nothing here right now.<br>New requests will show up automatically.</div>
+    </div>
+
+    <div style="height:24px"></div>
+  </div>
+
+  <!-- Bottom nav — freelancer side -->
+    <nav class="bottom-nav">
+    <a href="lensly-x-feed.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Feed
+    </a>
+    <a href="lensly-x-learning.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+      Learning
+    </a>
+    <a href="lensly-x-profile.html" class="nav-item active">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+      Profile
+    </a>
+    <a href="lensly-x-shop.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      Shop
+    </a>
+  </nav>
+
+</div></div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════
+   TOAST
+══════════════════════════════════════ */
+let toastTimer;
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type === 'decline' ? ' decline' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+/* ══════════════════════════════════════
+   ACCEPT / DECLINE
+══════════════════════════════════════ */
+function acceptReq(id, btn) {
+  const card = document.querySelector(`.req-card[data-id="${id}"]`);
+  if (!card) return;
+
+  // Update pill
+  const pill = card.querySelector('.req-status-pill');
+  pill.textContent = 'Confirmed';
+  pill.className = 'req-status-pill pill-confirmed';
+  card.classList.remove('is-new');
+  card.dataset.status = 'confirmed';
+
+  // Replace action row with secondary actions
+  const actions = card.querySelector('.req-actions');
+  actions.outerHTML = `
+    <div class="req-actions secondary">
+      <button class="act-btn">💬 Message</button>
+      <button class="act-btn">📍 Directions</button>
+    </div>`;
+
+  updateCounts();
+  showToast('✓ Booking confirmed — client notified');
+  applyFilter();
+}
+
+function declineReq(id, btn) {
+  if (!confirm('Decline this booking request? This cannot be undone.')) return;
+  const card = document.querySelector(`.req-card[data-id="${id}"]`);
+  if (!card) return;
+
+  card.classList.add('removing');
+  setTimeout(() => {
+    card.remove();
+    updateCounts();
+    applyFilter();
+  }, 250);
+
+  showToast('Booking declined', 'decline');
+}
+
+/* ══════════════════════════════════════
+   EXPAND / COLLAPSE DETAIL
+══════════════════════════════════════ */
+function toggleExtra(toggle) {
+  const extra = toggle.nextElementSibling;
+  extra.classList.toggle('show');
+  toggle.textContent = extra.classList.contains('show')
+    ? 'Hide full details ▴'
+    : 'View full details ▾';
+}
+
+/* ══════════════════════════════════════
+   TABS / FILTER
+══════════════════════════════════════ */
+let currentTab = 'new';
+
+function switchTab(el) {
+  document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentTab = el.dataset.tab;
+  applyFilter();
+}
+
+function applyFilter() {
+  const cards = document.querySelectorAll('.req-card');
+  const groups = document.querySelectorAll('.day-group-label');
+  let anyVisible = false;
+
+  cards.forEach(c => {
+    const status = c.dataset.status;
+    let show = false;
+    if (currentTab === 'all') show = true;
+    else if (currentTab === 'new' && status === 'new') show = true;
+    else if (currentTab === 'confirmed' && status === 'confirmed') show = true;
+
+    c.style.display = show ? '' : 'none';
+    if (show) anyVisible = true;
+  });
+
+  // Hide group labels with no visible children
+  groups.forEach(g => {
+    let sibling = g.nextElementSibling;
+    let hasVisible = false;
+    while (sibling && !sibling.classList.contains('day-group-label')) {
+      if (sibling.classList.contains('req-card') && sibling.style.display !== 'none') {
+        hasVisible = true;
+      }
+      sibling = sibling.nextElementSibling;
+    }
+    g.style.display = hasVisible ? '' : 'none';
+  });
+
+  document.getElementById('emptyState').style.display = anyVisible ? 'none' : 'block';
+}
+
+function updateCounts() {
+  const newCount = document.querySelectorAll('.req-card[data-status="new"]').length;
+  const confCount = document.querySelectorAll('.req-card[data-status="confirmed"]').length;
+
+  document.getElementById('statNew').textContent = newCount;
+  document.getElementById('statConfirmed').textContent = confCount;
+  document.getElementById('tabCountNew').textContent = newCount;
+  document.getElementById('tabCountConfirmed').textContent = confCount;
+}
+
+/* Init */
+updateCounts();
+applyFilter();
+</script>
+</body>
+</html>

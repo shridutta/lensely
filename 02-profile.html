@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lensly — Sofia Reyes</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+
+/* ── Hero ── */
+.profile-hero {
+  background:linear-gradient(180deg,#1a150a 0%,var(--bg) 100%);
+  padding:0 20px 20px; border-bottom:1px solid var(--border);
+}
+.profile-main { display:flex; gap:14px; align-items:flex-start; }
+.profile-avatar {
+  width:76px; height:76px; border-radius:var(--r-md);
+  border:1.5px solid var(--accent); display:flex;
+  align-items:center; justify-content:center; font-size:34px;
+  background:var(--surface); flex-shrink:0;
+}
+.profile-name  { font-family:var(--serif); font-size:26px; font-weight:400; line-height:1.1; }
+.profile-spec  { font-size:10px; color:var(--muted); letter-spacing:1px; margin-top:4px; }
+.profile-stats { display:flex; gap:0; margin-top:14px; border:1px solid var(--border); border-radius:var(--r-sm); overflow:hidden; }
+.stat          { flex:1; padding:10px; text-align:center; border-right:1px solid var(--border); }
+.stat:last-child { border-right:none; }
+.stat-val      { font-family:var(--serif); font-size:20px; color:var(--accent); }
+.stat-label    { font-size:9px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-top:2px; }
+
+/* ── Portfolio grid ── */
+.photo-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:3px; }
+.photo-thumb { aspect-ratio:1; border-radius:3px; overflow:hidden; }
+.photo-thumb.tall { grid-row:span 2; aspect-ratio:unset; }
+.photo-thumb .ph { width:100%; height:100%; min-height:80px; display:flex; align-items:center; justify-content:center; font-size:24px; opacity:.4; }
+.p1{background:linear-gradient(135deg,#1e1810,#2a2215)}
+.p2{background:linear-gradient(135deg,#111a1e,#15242a)}
+.p3{background:linear-gradient(135deg,#1a1118,#251520)}
+.p4{background:linear-gradient(135deg,#111810,#162014)}
+.p5{background:linear-gradient(135deg,#1e1510,#2a1e12)}
+
+/* ── Package cards (half / full only) ── */
+.pkg-tabs { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.pkg-card {
+  background:var(--surface); border:2px solid var(--border);
+  border-radius:var(--r-md); padding:14px; cursor:pointer;
+  transition:all .2s; position:relative; overflow:hidden;
+}
+.pkg-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:var(--border); transition:background .2s;
+}
+.pkg-card:hover { border-color:var(--border-hi); }
+.pkg-card.selected { border-color:var(--accent); background:#191510; }
+.pkg-card.selected::before { background:var(--accent); }
+.pkg-icon    { font-size:22px; margin-bottom:6px; }
+.pkg-name    { font-family:var(--serif); font-size:15px; font-weight:400; }
+.pkg-hours   { font-size:10px; color:var(--muted); margin-top:2px; }
+.pkg-price   { font-family:var(--serif); font-size:22px; color:var(--accent); margin-top:8px; }
+.pkg-per     { font-size:9px; color:var(--muted); }
+.pkg-tags    { display:flex; flex-wrap:wrap; gap:4px; margin-top:10px; }
+.pkg-tag     { font-size:8px; color:var(--muted); padding:2px 7px; border:1px solid var(--border); border-radius:99px; }
+.pkg-tag.hl  { border-color:var(--accent); color:var(--accent); }
+.pkg-selected-tick {
+  position:absolute; top:8px; right:8px;
+  width:18px; height:18px; border-radius:50%;
+  background:var(--accent); color:#0d0d0d;
+  font-size:10px; display:none;
+  align-items:center; justify-content:center;
+}
+.pkg-card.selected .pkg-selected-tick { display:flex; }
+
+/* ── Comparison strip ── */
+.compare-strip {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-sm); overflow:hidden; margin-top:8px;
+}
+.compare-row {
+  display:flex; align-items:center;
+  padding:10px 14px; border-bottom:1px solid var(--border); font-size:11px;
+}
+.compare-row:last-child { border-bottom:none; }
+.compare-label { flex:1; color:var(--muted); }
+.compare-half  { width:80px; text-align:center; font-family:var(--serif); font-size:13px; }
+.compare-full  { width:80px; text-align:center; font-family:var(--serif); font-size:13px; color:var(--accent); }
+.compare-header .compare-half,
+.compare-header .compare-full { font-family:var(--mono); font-size:9px; letter-spacing:1px; color:var(--muted); }
+
+/* ── Equipment section ── */
+.equip-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.equip-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-sm); padding:11px 12px;
+}
+.equip-category {
+  font-size:9px; color:var(--accent); letter-spacing:1.5px;
+  text-transform:uppercase; margin-bottom:6px;
+}
+.equip-item {
+  display:flex; align-items:flex-start; gap:7px;
+  font-size:10px; color:var(--text); padding:3px 0;
+  border-bottom:1px solid var(--border); line-height:1.4;
+}
+.equip-item:last-child { border-bottom:none; }
+.equip-icon { font-size:13px; flex-shrink:0; margin-top:1px; }
+.equip-name { flex:1; }
+.equip-sub  { font-size:9px; color:var(--muted); display:block; }
+
+/* ── Reviews ── */
+.review      { padding:12px 0; border-bottom:1px solid var(--border); }
+.review:last-child { border-bottom:none; }
+.review-header { display:flex; justify-content:space-between; align-items:center; }
+.review-name { font-size:12px; font-weight:500; }
+.review-date { font-size:10px; color:var(--muted); }
+.review-text { font-size:11px; color:var(--muted); margin-top:5px; line-height:1.6; font-style:italic; font-family:var(--serif); }
+
+/* ── Sticky footer ── */
+.sticky-footer {
+  padding:12px 20px 26px; border-top:1px solid var(--border);
+  background:var(--bg); flex-shrink:0;
+  display:flex; gap:10px; align-items:center;
+}
+.footer-pkg-info { flex:1; }
+.footer-pkg-name { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+.footer-price    { font-family:var(--serif); font-size:22px; color:var(--accent); }
+.footer-hrs      { font-size:9px; color:var(--muted); margin-top:1px; }
+
+/* ── Section card ── */
+.sec-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-md); overflow:hidden;
+}
+.sec-card-hd {
+  padding:10px 14px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:8px;
+  font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted);
+}
+.sec-card-hd span { font-size:16px; }
+.sec-card-body { padding:12px; }
+</style>
+</head>
+<body>
+<div class="shell"><div class="phone">
+
+  <div class="status-bar">
+    <span class="time">9:43</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+
+  <div class="top-nav">
+    <a href="01-home.html" class="back-btn">←</a>
+    <span class="nav-title">Profile</span>
+    <a href="#" class="nav-action">♡ Save</a>
+  </div>
+
+  <div class="content">
+
+    <!-- ── HERO ── -->
+    <div class="profile-hero fade-up" style="margin:0 -20px;padding:0 20px 20px;">
+      <div class="profile-main">
+        <div class="profile-avatar">📷</div>
+        <div>
+          <div class="profile-name">Sofia Reyes</div>
+          <div class="profile-spec">PORTRAIT · EDITORIAL · WEDDING</div>
+          <div class="stars mt-4" style="font-size:13px">★★★★★
+            <span style="font-size:10px;color:var(--muted)">4.9 (128 reviews)</span>
+          </div>
+          <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap">
+            <span class="chip active" style="font-size:9px;padding:3px 8px">Available Wed</span>
+            <span class="chip" style="font-size:9px;padding:3px 8px">Quick Response</span>
+            <span class="chip" style="font-size:9px;padding:3px 8px">Outstation OK</span>
+          </div>
+        </div>
+      </div>
+      <div class="profile-stats mt-12">
+        <div class="stat"><div class="stat-val">128</div><div class="stat-label">Reviews</div></div>
+        <div class="stat"><div class="stat-val">6 yr</div><div class="stat-label">Experience</div></div>
+        <div class="stat"><div class="stat-val">340+</div><div class="stat-label">Shoots</div></div>
+      </div>
+    </div>
+
+    <!-- ── PORTFOLIO ── -->
+    <p class="section-label fade-up-2" style="margin-top:16px">Portfolio</p>
+    <div class="photo-grid fade-up-2">
+      <div class="photo-thumb tall p1"><div class="ph">🖼</div></div>
+      <div class="photo-thumb p2"><div class="ph">🖼</div></div>
+      <div class="photo-thumb p3"><div class="ph">🖼</div></div>
+      <div class="photo-thumb p4"><div class="ph">🖼</div></div>
+      <div class="photo-thumb p5"><div class="ph">🖼</div></div>
+    </div>
+    <a href="#" style="display:block;text-align:center;font-size:10px;color:var(--accent);letter-spacing:2px;margin-top:10px;text-transform:uppercase">VIEW ALL 86 PHOTOS →</a>
+
+    <!-- ── ABOUT ── -->
+    <p class="section-label fade-up-3" style="margin-top:16px">About</p>
+    <p class="fade-up-3" style="font-family:var(--serif);font-size:14px;font-style:italic;line-height:1.8;color:var(--text)">
+      "I specialize in natural, editorial portraiture and wedding photography. I shoot on location across India — bringing cinematic quality to every frame, from intimate ceremonies to grand celebrations."
+    </p>
+
+    <!-- ── PACKAGES: HALF & FULL DAY ONLY ── -->
+    <p class="section-label fade-up-4" style="margin-top:16px">Packages</p>
+    <div class="pkg-tabs fade-up-4">
+
+      <!-- HALF DAY -->
+      <div class="pkg-card selected" id="pkgHalf" onclick="selectPkg('half')">
+        <div class="pkg-selected-tick">✓</div>
+        <div class="pkg-icon">🌤</div>
+        <div class="pkg-name">Half Day</div>
+        <div class="pkg-hours">6 hours · up to 3 locations</div>
+        <div class="pkg-price">₹17,280</div>
+        <div class="pkg-per">for 6 hrs</div>
+        <div class="pkg-tags">
+          <span class="pkg-tag">~50 photos</span>
+          <span class="pkg-tag">Online gallery</span>
+          <span class="pkg-tag">7-day delivery</span>
+          <span class="pkg-tag hl">+OT: ₹2,880/hr</span>
+        </div>
+      </div>
+
+      <!-- FULL DAY -->
+      <div class="pkg-card" id="pkgFull" onclick="selectPkg('full')">
+        <div class="pkg-selected-tick">✓</div>
+        <div class="pkg-icon">☀️</div>
+        <div class="pkg-name">Full Day</div>
+        <div class="pkg-hours">12 hours · unlimited locations</div>
+        <div class="pkg-price">₹34,560</div>
+        <div class="pkg-per">= 2× Half Day</div>
+        <div class="pkg-tags">
+          <span class="pkg-tag">100+ photos</span>
+          <span class="pkg-tag">Video clips</span>
+          <span class="pkg-tag">Commercial use</span>
+          <span class="pkg-tag hl">+OT: ₹2,880/hr</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compare table -->
+    <div class="compare-strip fade-up-4">
+      <div class="compare-row compare-header">
+        <span class="compare-label"></span>
+        <span class="compare-half">HALF DAY</span>
+        <span class="compare-full">FULL DAY</span>
+      </div>
+      <div class="compare-row">
+        <span class="compare-label">Duration</span>
+        <span class="compare-half">6 hrs</span>
+        <span class="compare-full">12 hrs</span>
+      </div>
+      <div class="compare-row">
+        <span class="compare-label">Edited Photos</span>
+        <span class="compare-half">~50</span>
+        <span class="compare-full">100+</span>
+      </div>
+      <div class="compare-row">
+        <span class="compare-label">Locations</span>
+        <span class="compare-half">3 max</span>
+        <span class="compare-full">Unlimited</span>
+      </div>
+      <div class="compare-row">
+        <span class="compare-label">Video Clips</span>
+        <span class="compare-half">—</span>
+        <span class="compare-full">✓</span>
+      </div>
+      <div class="compare-row">
+        <span class="compare-label">Commercial Use</span>
+        <span class="compare-half">—</span>
+        <span class="compare-full">✓</span>
+      </div>
+      <div class="compare-row">
+        <span class="compare-label">Price</span>
+        <span class="compare-half">₹17,280</span>
+        <span class="compare-full">₹34,560</span>
+      </div>
+    </div>
+
+    <!-- ── GADGETS & EQUIPMENT ── -->
+    <p class="section-label fade-up-5" style="margin-top:16px">Gadgets & Equipment</p>
+    <div class="equip-grid fade-up-5">
+
+      <!-- Cameras -->
+      <div class="equip-card">
+        <div class="equip-category">📷 Cameras</div>
+        <div class="equip-item">
+          <span class="equip-icon">🎯</span>
+          <div class="equip-name">Sony A7 IV
+            <span class="equip-sub">33MP Full-Frame · Primary</span>
+          </div>
+        </div>
+        <div class="equip-item">
+          <span class="equip-icon">🔄</span>
+          <div class="equip-name">Sony A7 III
+            <span class="equip-sub">24MP · Backup body</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lenses -->
+      <div class="equip-card">
+        <div class="equip-category">🔭 Lenses</div>
+        <div class="equip-item">
+          <span class="equip-icon">✦</span>
+          <div class="equip-name">Sony 85mm f/1.4 GM
+            <span class="equip-sub">Portrait · Bokeh master</span>
+          </div>
+        </div>
+        <div class="equip-item">
+          <span class="equip-icon">✦</span>
+          <div class="equip-name">Sony 24-70mm f/2.8 GM
+            <span class="equip-sub">All-round zoom</span>
+          </div>
+        </div>
+        <div class="equip-item">
+          <span class="equip-icon">✦</span>
+          <div class="equip-name">Sony 16-35mm f/2.8
+            <span class="equip-sub">Wide · Group shots</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lighting -->
+      <div class="equip-card">
+        <div class="equip-category">💡 Lighting</div>
+        <div class="equip-item">
+          <span class="equip-icon">⚡</span>
+          <div class="equip-name">Godox AD600 Pro
+            <span class="equip-sub">600W Outdoor strobe</span>
+          </div>
+        </div>
+        <div class="equip-item">
+          <span class="equip-icon">⚡</span>
+          <div class="equip-name">Godox V1 Speedlite ×2
+            <span class="equip-sub">On-camera flash</span>
+          </div>
+        </div>
+        <div class="equip-item">
+          <span class="equip-icon">🟡</span>
+          <div class="equip-name">LED Panels ×2
+            <span class="equip-sub">Bi-colour continuous</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Support gear -->
+      <div class="equip-card">
+        <div class="equip-category">🎬 Support</div>
+        <div class="equip-item">
+          <span class="equip-icon">🦺</span>
+          <div class="equip-name">Manfrotto Carbon Tripod
+            <span class="equip-sub">Fluid head · Stable shots</span>
+          </div>
+        </div>
+        <div class="equip-item">
+          <span class="equip-icon">🚁</span>
+          <div class="equip-name">DJI Mini 4 Pro Drone
+            <span class="equip-sub">4K aerial · Licensed pilot</span>
+          </div>
+        </div>
+        <div class="equip-item">
+          <span class="equip-icon">📡</span>
+          <div class="equip-name">Godox X2T Trigger
+            <span class="equip-sub">Wireless flash control</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accessories -->
+      <div class="equip-card">
+        <div class="equip-category">🎒 Accessories</div>
+        <div class="equip-item">
+          <span class="equip-icon">☂️</span>
+          <div class="equip-name">Softbox 90×120cm
+            <span class="equip-sub">Diffused flattering light</span>
+          </div>
+        </div>
+        <div class="equip-item">
+          <span class="equip-icon">🔋</span>
+          <div class="equip-name">4× Sony NP-FZ100
+            <span class="equip-sub">Full-day power backup</span>
+          </div>
+        </div>
+        <div class="equip-item">
+          <span class="equip-icon">💾</span>
+          <div class="equip-name">CFexpress + SD Cards
+            <span class="equip-sub">512GB redundant storage</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Post-production -->
+      <div class="equip-card">
+        <div class="equip-category">🖥 Post-Production</div>
+        <div class="equip-item">
+          <span class="equip-icon">🎨</span>
+          <div class="equip-name">Adobe Lightroom Classic
+            <span class="equip-sub">Colour grading · Culling</span>
+          </div>
+        </div>
+        <div class="equip-item">
+          <span class="equip-icon">✏️</span>
+          <div class="equip-name">Adobe Photoshop
+            <span class="equip-sub">Retouching · Composites</span>
+          </div>
+        </div>
+        <div class="equip-item">
+          <span class="equip-icon">🖥</span>
+          <div class="equip-name">Calibrated 4K Display
+            <span class="equip-sub">Colour-accurate editing</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── REVIEWS ── -->
+    <p class="section-label" style="margin-top:16px">Reviews</p>
+    <div>
+      <div class="review">
+        <div class="review-header">
+          <span class="review-name">Jessica T.</span>
+          <span class="review-date">March 2026</span>
+        </div>
+        <div class="stars" style="font-size:11px;margin-top:3px">★★★★★</div>
+        <p class="review-text">"Sofia captured our wedding beautifully. Every shot is cinematic. We are so happy we chose her!"</p>
+      </div>
+      <div class="review">
+        <div class="review-header">
+          <span class="review-name">Raj M.</span>
+          <span class="review-date">Feb 2026</span>
+        </div>
+        <div class="stars" style="font-size:11px;margin-top:3px">★★★★★</div>
+        <p class="review-text">"Her equipment is top-notch and it shows in the results. The drone shots from our mehendi were stunning!"</p>
+      </div>
+      <div class="review">
+        <div class="review-header">
+          <span class="review-name">Ananya S.</span>
+          <span class="review-date">Jan 2026</span>
+        </div>
+        <div class="stars" style="font-size:11px;margin-top:3px">★★★★☆</div>
+        <p class="review-text">"Very professional and well-prepared. Had backup gear for everything. Highly recommended!"</p>
+      </div>
+    </div>
+    <div style="height:16px"></div>
+
+  </div><!-- /content -->
+
+  <!-- ── STICKY FOOTER ── -->
+  <div class="sticky-footer">
+    <div class="footer-pkg-info">
+      <div class="footer-pkg-name" id="footerPkgName">Half Day Selected</div>
+      <div class="footer-price"    id="footerPrice">₹17,280</div>
+      <div class="footer-hrs"      id="footerHrs">6 hrs · OT: ₹2,880/hr</div>
+    </div>
+    <button class="btn btn-primary" onclick="goToBooking()"
+      style="width:auto;flex:1.2;padding:14px 16px;font-size:10px">
+      CHECK AVAILABILITY →
+    </button>
+  </div>
+
+</div></div>
+
+<script>
+/* ══════════════════════════════════════
+   PACKAGE SELECTION STATE
+══════════════════════════════════════ */
+let selectedPkg = 'half'; // default
+
+const PKG = {
+  half: {
+    type    : 'half',
+    name    : 'Half Day',
+    price   : 17280,
+    hrs     : 6,
+    footerName : 'Half Day Selected',
+    footerHrs  : '6 hrs · OT: ₹2,880/hr',
+  },
+  full: {
+    type    : 'full',
+    name    : 'Full Day',
+    price   : 34560,
+    hrs     : 12,
+    footerName : 'Full Day Selected',
+    footerHrs  : '12 hrs · OT: ₹2,880/hr',
+  },
+};
+
+function selectPkg(type) {
+  selectedPkg = type;
+  document.getElementById('pkgHalf').classList.toggle('selected', type === 'half');
+  document.getElementById('pkgFull').classList.toggle('selected', type === 'full');
+
+  const p = PKG[type];
+  document.getElementById('footerPkgName').textContent = p.footerName;
+  document.getElementById('footerPrice').textContent   = '₹' + p.price.toLocaleString('en-IN');
+  document.getElementById('footerHrs').textContent     = p.footerHrs;
+}
+
+/* ══════════════════════════════════════
+   SAVE PHOTOGRAPHER INFO TO SESSION
+   then navigate to availability page
+══════════════════════════════════════ */
+function goToBooking() {
+  const pkg = PKG[selectedPkg];
+
+  const photographerData = {
+    name         : 'Sofia Reyes',
+    speciality   : 'Portrait · Editorial · Wedding',
+    rating       : '4.9',
+    reviews      : 128,
+    avatar       : '📷',
+    selectedPkg  : pkg.type,        // 'half' | 'full'
+    pkgName      : pkg.name,        // 'Half Day' | 'Full Day'
+    pkgPrice     : pkg.price,       // 17280 | 34560
+    pkgHrs       : pkg.hrs,         // 6 | 12
+    halfDayPrice : 17280,
+    fullDayPrice : 34560,
+    otRate       : 2880,            // overtime per hr
+  };
+
+  try {
+    sessionStorage.setItem('lensly_photographer', JSON.stringify(photographerData));
+    // Also pre-seed default package for 03-datetime so it shows correct pricing
+    sessionStorage.setItem('lensly_selected_pkg', pkg.type);
+  } catch(e) {}
+
+  window.location.href = '03-datetime.html';
+}
+
+/* ══════════════════════════════════════
+   RESTORE: if user comes back from 03
+══════════════════════════════════════ */
+(function restore() {
+  try {
+    const saved = sessionStorage.getItem('lensly_selected_pkg');
+    if (saved === 'half' || saved === 'full') selectPkg(saved);
+  } catch(e) {}
+})();
+</script>
+</body></html>

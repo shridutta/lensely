@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lensly X — Booking Detail</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+
+.brand-row { display:flex; align-items:center; justify-content:space-between; padding:0 20px; }
+.brand-mark { display:flex; align-items:baseline; gap:4px; font-family:var(--serif); font-size:14px; letter-spacing:1px; }
+.brand-mark .lensly { color:var(--muted); font-weight:300; }
+.brand-mark .x { color:var(--accent); font-weight:600; font-size:15px; border:1px solid var(--accent); border-radius:4px; padding:0px 5px; line-height:1.5; margin-left:2px; }
+
+/* ── Status banner ── */
+.status-banner {
+  padding:11px 14px; border-radius:var(--r-sm);
+  font-size:11px; display:flex; align-items:center; gap:8px;
+}
+.banner-new       { background:#1a150a; border:1px solid #3a2e18; color:var(--accent); }
+.banner-confirmed { background:#0f1a12; border:1px solid #1e4030; color:var(--success); }
+
+/* ── Client card ── */
+.client-card {
+  display:flex; align-items:center; gap:13px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-md); padding:14px;
+}
+.client-avatar { width:52px; height:52px; border-radius:50%; background:var(--surface2); border:1px solid var(--border-hi); display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+.client-name { font-family:var(--serif); font-size:17px; }
+.client-meta { font-size:10px; color:var(--muted); margin-top:2px; }
+.client-contact-btns { display:flex; gap:6px; margin-left:auto; }
+.contact-btn {
+  width:34px; height:34px; border-radius:50%;
+  border:1px solid var(--border-hi); display:flex; align-items:center; justify-content:center;
+  font-size:14px; cursor:pointer; transition:all .2s; text-decoration:none; color:var(--text);
+}
+.contact-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+/* ── Detail card ── */
+.detail-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); overflow:hidden; }
+.detail-row { display:flex; align-items:flex-start; gap:10px; padding:12px 14px; border-bottom:1px solid var(--border); }
+.detail-row:last-child { border-bottom:none; }
+.detail-icon { font-size:15px; width:20px; text-align:center; flex-shrink:0; margin-top:1px; }
+.detail-lbl { font-size:9px; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:3px; }
+.detail-val { font-size:12px; color:var(--text); line-height:1.5; }
+.detail-sub { font-size:10px; color:var(--muted); margin-top:2px; }
+.detail-right { margin-left:auto; flex-shrink:0; text-align:right; }
+.price-tag { font-family:var(--serif); font-size:18px; color:var(--accent); }
+
+/* ── Map placeholder ── */
+.map-frame {
+  height:130px; border-radius:var(--r-sm); border:1px solid var(--border);
+  background:linear-gradient(135deg,#161616,#1a1a1a);
+  display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:4px; color:var(--muted); font-size:10px;
+}
+.map-frame .mp-icon { font-size:24px; opacity:.4; }
+
+/* ── Cost breakdown ── */
+.cost-row { display:flex; justify-content:space-between; padding:6px 0; font-size:11px; }
+.cost-row .cl { color:var(--muted); }
+.cost-row .cv { font-family:var(--mono); }
+.cost-row.total { border-top:1px solid var(--border); margin-top:4px; padding-top:10px; font-size:13px; }
+.cost-row.total .cl { color:var(--text); font-weight:500; }
+.cost-row.total .cv { font-family:var(--serif); font-size:18px; color:var(--accent); }
+
+/* ── Note box ── */
+.note-box {
+  background:#1a150a; border:1px solid #3a2e18; border-radius:var(--r-sm);
+  padding:11px 13px; font-size:11px; color:var(--text); line-height:1.7; font-style:italic; font-family:var(--serif);
+}
+
+/* ── Action footer ── */
+.action-footer {
+  padding:14px 20px 26px; border-top:1px solid var(--border);
+  background:var(--bg); flex-shrink:0; display:flex; gap:10px;
+}
+.action-footer .act-btn {
+  flex:1; padding:14px; border-radius:var(--r-sm);
+  font-family:var(--mono); font-size:11px; letter-spacing:1.5px;
+  text-transform:uppercase; cursor:pointer; transition:all .2s; border:none; text-align:center;
+}
+.act-accept { background:var(--accent); color:#0d0d0d; }
+.act-accept:hover { background:var(--accent2); }
+.act-decline { background:transparent; border:1px solid var(--border-hi); color:var(--muted); }
+.act-decline:hover { border-color:var(--danger); color:var(--danger); }
+.act-secondary { background:transparent; border:1px solid var(--border); color:var(--text); }
+.act-secondary:hover { border-color:var(--accent); color:var(--accent); }
+
+</style>
+</head>
+<body>
+<div class="shell"><div class="phone">
+
+  <div class="status-bar">
+    <span class="time">9:30</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+
+  <div class="top-nav">
+    <a href="lensly-x-inbox.html" class="back-btn">←</a>
+    <div class="brand-mark"><span class="lensly">LENSLY</span><span class="x">X</span></div>
+    <span style="width:36px"></span>
+  </div>
+
+  <div class="content">
+
+    <!-- Status banner -->
+    <div class="status-banner banner-new fade-up" id="statusBanner">
+      ⏳ <span>This request is awaiting your response — accept or decline below.</span>
+    </div>
+
+    <!-- Client card -->
+    <div class="client-card mt-12 fade-up-2">
+      <div class="client-avatar">👰</div>
+      <div>
+        <div class="client-name">Ananya Sharma</div>
+        <div class="client-meta">Requested 12 min ago</div>
+      </div>
+      <div class="client-contact-btns">
+        <a href="tel:" class="contact-btn">📞</a>
+        <a href="#" class="contact-btn">💬</a>
+      </div>
+    </div>
+
+    <!-- Booking details -->
+    <p class="section-label fade-up-3">Booking Details</p>
+    <div class="detail-card fade-up-3">
+      <div class="detail-row">
+        <span class="detail-icon">📅</span>
+        <div>
+          <div class="detail-lbl">Date &amp; Time</div>
+          <div class="detail-val">Saturday, 12 July 2026</div>
+          <div class="detail-sub">Starts 9:00 AM</div>
+        </div>
+      </div>
+      <div class="detail-row">
+        <span class="detail-icon">☀️</span>
+        <div>
+          <div class="detail-lbl">Package</div>
+          <div class="detail-val">Full Day — 12 hours</div>
+        </div>
+        <div class="detail-right">
+          <div class="price-tag">₹34,560</div>
+        </div>
+      </div>
+      <div class="detail-row">
+        <span class="detail-icon">🎯</span>
+        <div>
+          <div class="detail-lbl">Occasion</div>
+          <div class="detail-val">Wedding</div>
+        </div>
+      </div>
+      <div class="detail-row">
+        <span class="detail-icon">👔</span>
+        <div>
+          <div class="detail-lbl">Outfits Planned</div>
+          <div class="detail-val">3 outfit changes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Location -->
+    <p class="section-label fade-up-4">Location</p>
+    <div class="fade-up-4">
+      <div class="map-frame">
+        <span class="mp-icon">📍</span>
+        <span>Taj Lands End, Mumbai</span>
+      </div>
+      <a href="#" style="display:block;text-align:center;font-size:10px;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;margin-top:8px;text-decoration:none">Open in Google Maps →</a>
+    </div>
+
+    <!-- Cost breakdown -->
+    <p class="section-label fade-up-5">What You'll Earn</p>
+    <div class="detail-card fade-up-5" style="padding:12px 14px">
+      <div class="cost-row"><span class="cl">Full Day package</span><span class="cv">₹34,560</span></div>
+      <div class="cost-row"><span class="cl">Lensly platform fee (10%)</span><span class="cv">−₹3,456</span></div>
+      <div class="cost-row total"><span class="cl">You receive</span><span class="cv">₹31,104</span></div>
+    </div>
+
+    <!-- Client note -->
+    <p class="section-label fade-up-5">Note from Client</p>
+    <div class="note-box fade-up-5">
+      "We'd love some candid drone shots during the entry. Also need a quick LinkedIn-style portrait of the groom before the ceremony starts."
+    </div>
+
+    <div style="height:16px"></div>
+  </div>
+
+  <!-- Action footer -->
+  <div class="action-footer" id="actionFooter">
+    <button class="act-btn act-decline" onclick="declineBooking()">Decline</button>
+    <button class="act-btn act-accept" onclick="acceptBooking()">Accept Booking</button>
+  </div>
+
+</div></div>
+
+<!-- Toast -->
+<div id="toast" style="position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--success);color:white;border-radius:var(--r-sm);padding:10px 18px;font-size:11px;letter-spacing:.5px;white-space:nowrap;opacity:0;pointer-events:none;transition:all .3s;z-index:200"></div>
+
+<script>
+function showToast(msg, isDecline) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = isDecline ? 'var(--danger)' : 'var(--success)';
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(-20px)';
+  }, 2400);
+}
+
+function acceptBooking() {
+  document.getElementById('statusBanner').className = 'status-banner banner-confirmed';
+  document.getElementById('statusBanner').innerHTML = '✓ <span>Booking confirmed — the client has been notified.</span>';
+  document.getElementById('actionFooter').innerHTML = `
+    <button class="act-btn act-secondary">💬 Message Client</button>
+    <button class="act-btn act-secondary">📍 Directions</button>
+  `;
+  showToast('✓ Booking confirmed');
+}
+
+function declineBooking() {
+  if (!confirm('Decline this booking request? This cannot be undone.')) return;
+  showToast('Booking declined', true);
+  setTimeout(() => { window.location.href = 'lensly-x-inbox.html'; }, 900);
+}
+</script>
+</body>
+</html>

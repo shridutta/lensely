@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lensly X — Profile</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+
+.brand-row { display:flex; align-items:center; justify-content:space-between; padding:0 20px; }
+.brand-mark { display:flex; align-items:baseline; gap:4px; font-family:var(--serif); font-size:15px; letter-spacing:1px; }
+.brand-mark .lensly { color:var(--muted); font-weight:300; }
+.brand-mark .x { color:var(--accent); font-weight:600; font-size:17px; border:1px solid var(--accent); border-radius:4px; padding:0px 6px; line-height:1.5; margin-left:2px; }
+
+/* ── Profile hero ── */
+.profile-hero { display:flex; gap:14px; align-items:center; padding:0 20px; margin-top:14px; }
+.profile-avatar {
+  width:64px; height:64px; border-radius:var(--r-md);
+  border:1.5px solid var(--accent); display:flex; align-items:center; justify-content:center;
+  font-size:28px; background:var(--surface); flex-shrink:0;
+}
+.profile-name { font-family:var(--serif); font-size:22px; }
+.profile-spec { font-size:10px; color:var(--muted); margin-top:2px; }
+.profile-rating { font-size:11px; margin-top:4px; }
+
+/* ── Quick access grid — Inbox / Calendar / Earnings / Settings ── */
+.quick-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; }
+.quick-tile {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-md); padding:14px; cursor:pointer;
+  transition:all .2s; text-decoration:none; color:var(--text); position:relative;
+}
+.quick-tile:hover { border-color:var(--accent); background:#191510; }
+.quick-tile-icon { font-size:22px; }
+.quick-tile-title { font-family:var(--serif); font-size:14px; margin-top:8px; }
+.quick-tile-sub { font-size:9px; color:var(--muted); margin-top:2px; }
+.quick-tile-badge {
+  position:absolute; top:10px; right:10px;
+  background:var(--accent); color:#0d0d0d; font-size:9px; font-weight:600;
+  min-width:18px; height:18px; border-radius:99px; display:flex; align-items:center; justify-content:center;
+  padding:0 5px;
+}
+
+/* ── Settings section ── */
+.settings-group {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-md); overflow:hidden;
+}
+.settings-row {
+  display:flex; align-items:center; gap:12px;
+  padding:13px 14px; border-bottom:1px solid var(--border);
+  cursor:pointer; transition:background .15s;
+}
+.settings-row:last-child { border-bottom:none; }
+.settings-row:hover { background:var(--surface2); }
+.settings-icon { font-size:16px; width:22px; text-align:center; flex-shrink:0; }
+.settings-label { flex:1; font-size:12px; }
+.settings-value { font-size:10px; color:var(--muted); }
+.settings-arrow { color:var(--muted); font-size:14px; flex-shrink:0; }
+
+.toggle {
+  width:38px; height:22px; background:var(--border); border-radius:99px;
+  position:relative; transition:background .2s; cursor:pointer; flex-shrink:0;
+}
+.toggle.on { background:var(--accent); }
+.toggle::after {
+  content:''; position:absolute; width:16px; height:16px; background:white;
+  border-radius:50%; top:3px; left:3px; transition:transform .2s;
+}
+.toggle.on::after { transform:translateX(16px); }
+
+.edit-field { display:none; padding:0 14px 14px; gap:8px; flex-direction:column; }
+.edit-field.show { display:flex; animation:fadeUp .2s ease both; }
+.edit-field input {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:var(--r-sm); padding:9px 12px; font-family:var(--mono);
+  font-size:12px; color:var(--text); outline:none; transition:border-color .2s;
+}
+.edit-field input:focus { border-color:var(--accent); }
+.edit-save {
+  align-self:flex-end; font-size:9px; color:var(--accent);
+  letter-spacing:1px; text-transform:uppercase; cursor:pointer; padding:4px 8px;
+}
+
+.logout-btn {
+  display:block; text-align:center; width:100%;
+  padding:13px; margin-top:18px; border-radius:var(--r-sm);
+  border:1px solid var(--danger); color:var(--danger);
+  background:transparent; font-family:var(--mono); font-size:11px;
+  letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; transition:all .2s;
+}
+.logout-btn:hover { background:#1e1010; }
+
+</style>
+</head>
+<body>
+<div class="shell"><div class="phone">
+
+  <div class="status-bar">
+    <span class="time">9:30</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+
+  <div class="brand-row fade-up">
+    <div class="brand-mark"><span class="lensly">LENSLY</span><span class="x">X</span></div>
+  </div>
+
+  <!-- Profile hero -->
+  <div class="profile-hero fade-up-2">
+    <div class="profile-avatar">📷</div>
+    <div>
+      <div class="profile-name">Sofia Reyes</div>
+      <div class="profile-spec">Portrait · Editorial · Wedding</div>
+      <div class="profile-rating"><span class="stars" style="font-size:12px">★★★★★</span> <span style="color:var(--muted);font-size:10px">4.9 (128 reviews)</span></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Quick access: Inbox / Calendar / Earnings / Account -->
+    <div class="quick-grid fade-up-3">
+      <a href="lensly-x-inbox.html" class="quick-tile">
+        <span class="quick-tile-badge">3</span>
+        <div class="quick-tile-icon">📥</div>
+        <div class="quick-tile-title">Inbox</div>
+        <div class="quick-tile-sub">Booking requests</div>
+      </a>
+      <a href="lensly-x-calendar.html" class="quick-tile">
+        <div class="quick-tile-icon">📆</div>
+        <div class="quick-tile-title">Calendar</div>
+        <div class="quick-tile-sub">Availability &amp; schedule</div>
+      </a>
+      <a href="lensly-x-earnings.html" class="quick-tile">
+        <div class="quick-tile-icon">💰</div>
+        <div class="quick-tile-title">Earnings</div>
+        <div class="quick-tile-sub">₹34,560 pending</div>
+      </a>
+      <a href="#" class="quick-tile" onclick="document.getElementById('accountSection').scrollIntoView({behavior:'smooth'});return false;">
+        <div class="quick-tile-icon">⚙️</div>
+        <div class="quick-tile-title">Account</div>
+        <div class="quick-tile-sub">Settings &amp; preferences</div>
+      </a>
+    </div>
+
+    <!-- Pricing & Packages -->
+    <p class="section-label fade-up-4" id="accountSection">Pricing &amp; Packages</p>
+    <div class="settings-group fade-up-4">
+      <div class="settings-row" onclick="toggleEdit('editHalf')">
+        <span class="settings-icon">🌤</span>
+        <span class="settings-label">Half Day Rate (6 hrs)</span>
+        <span class="settings-value">₹17,280</span>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="edit-field" id="editHalf">
+        <input type="text" value="17280" placeholder="Half day rate in ₹">
+        <span class="edit-save" onclick="saveField('editHalf')">SAVE</span>
+      </div>
+
+      <div class="settings-row" onclick="toggleEdit('editFull')">
+        <span class="settings-icon">☀️</span>
+        <span class="settings-label">Full Day Rate (12 hrs)</span>
+        <span class="settings-value">₹34,560</span>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="edit-field" id="editFull">
+        <input type="text" value="34560" placeholder="Full day rate in ₹">
+        <span class="edit-save" onclick="saveField('editFull')">SAVE</span>
+      </div>
+
+      <div class="settings-row" onclick="toggleEdit('editOT')">
+        <span class="settings-icon">⏱</span>
+        <span class="settings-label">Overtime Rate / hr</span>
+        <span class="settings-value">₹2,880</span>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="edit-field" id="editOT">
+        <input type="text" value="2880" placeholder="Overtime rate per hr">
+        <span class="edit-save" onclick="saveField('editOT')">SAVE</span>
+      </div>
+    </div>
+
+    <!-- Profile & Portfolio -->
+    <p class="section-label fade-up-4">Profile &amp; Portfolio</p>
+    <div class="settings-group fade-up-4">
+      <div class="settings-row" onclick="showToast('Opens portfolio photo manager')">
+        <span class="settings-icon">🖼</span>
+        <span class="settings-label">Portfolio Photos</span>
+        <span class="settings-value">86 photos</span>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="settings-row" onclick="showToast('Opens equipment list editor')">
+        <span class="settings-icon">🎒</span>
+        <span class="settings-label">Equipment &amp; Gadgets</span>
+        <span class="settings-value">6 categories</span>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="settings-row" onclick="showToast('Opens bio editor')">
+        <span class="settings-icon">📝</span>
+        <span class="settings-label">Bio &amp; Specialities</span>
+        <span class="settings-value">Edit</span>
+        <span class="settings-arrow">›</span>
+      </div>
+    </div>
+
+    <!-- Payout -->
+    <p class="section-label fade-up-5">Payout Details</p>
+    <div class="settings-group fade-up-5">
+      <div class="settings-row" onclick="toggleEdit('editBank')">
+        <span class="settings-icon">🏦</span>
+        <span class="settings-label">Bank Account</span>
+        <span class="settings-value">HDFC ···· 4821</span>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="edit-field" id="editBank">
+        <input type="text" value="HDFC Bank — XXXXXXXX4821" placeholder="Account details">
+        <span class="edit-save" onclick="saveField('editBank')">SAVE</span>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <p class="section-label fade-up-5">Notifications</p>
+    <div class="settings-group fade-up-5">
+      <div class="settings-row">
+        <span class="settings-icon">🔔</span>
+        <span class="settings-label">New booking requests</span>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-icon">💰</span>
+        <span class="settings-label">Payout updates</span>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-icon">💬</span>
+        <span class="settings-label">Client messages</span>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-icon">📣</span>
+        <span class="settings-label">Lensly news &amp; tips</span>
+        <div class="toggle" onclick="this.classList.toggle('on')"></div>
+      </div>
+    </div>
+
+    <!-- Availability default -->
+    <p class="section-label fade-up-5">Availability</p>
+    <div class="settings-group fade-up-5">
+      <div class="settings-row" onclick="showToast('Opens weekly availability editor')">
+        <span class="settings-icon">📆</span>
+        <span class="settings-label">Default Weekly Hours</span>
+        <span class="settings-value">Mon–Sat</span>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="settings-row">
+        <span class="settings-icon">✈️</span>
+        <span class="settings-label">Accept outstation work</span>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+    </div>
+
+    <!-- Support -->
+    <p class="section-label fade-up-5">Support</p>
+    <div class="settings-group fade-up-5">
+      <div class="settings-row" onclick="showToast('Opens help center')">
+        <span class="settings-icon">❓</span>
+        <span class="settings-label">Help &amp; Support</span>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="settings-row" onclick="showToast('Opens terms of service')">
+        <span class="settings-icon">📄</span>
+        <span class="settings-label">Terms &amp; Policies</span>
+        <span class="settings-arrow">›</span>
+      </div>
+    </div>
+
+    <button class="logout-btn fade-up-6" onclick="confirmLogout()">Log Out</button>
+
+    <div style="height:24px"></div>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <a href="lensly-x-feed.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Feed
+    </a>
+    <a href="lensly-x-learning.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+      Learning
+    </a>
+    <a href="lensly-x-profile.html" class="nav-item active">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+      Profile
+    </a>
+    <a href="lensly-x-shop.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      Shop
+    </a>
+  </nav>
+
+</div></div>
+
+<div id="toast" style="position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--success);color:white;border-radius:var(--r-sm);padding:10px 18px;font-size:11px;letter-spacing:.5px;white-space:nowrap;opacity:0;pointer-events:none;transition:all .3s;z-index:200"></div>
+
+<script>
+function toggleEdit(id) {
+  const field = document.getElementById(id);
+  document.querySelectorAll('.edit-field.show').forEach(f => {
+    if (f.id !== id) f.classList.remove('show');
+  });
+  field.classList.toggle('show');
+}
+
+function saveField(id) {
+  document.getElementById(id).classList.remove('show');
+  showToast('Saved successfully');
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = '✓  ' + msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(-20px)';
+  }, 2400);
+}
+
+function confirmLogout() {
+  if (confirm('Are you sure you want to log out?')) {
+    showToast('Logged out');
+  }
+}
+</script>
+</body>
+</html>

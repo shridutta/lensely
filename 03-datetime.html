@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lensly — Pick Your Days</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+
+/* ── Photographer pill ── */
+.ctx-pill {
+  display:flex; align-items:center; gap:10px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-lg); padding:10px 14px;
+}
+.ctx-avatar { font-size:22px; }
+.ctx-name  { font-family:var(--serif); font-size:14px; }
+.ctx-avail { font-size:10px; color:var(--success); margin-top:2px; }
+
+/* ── Step bubbles ── */
+.steps {
+  display:flex; gap:0; align-items:center; margin:16px 0 4px;
+}
+.step-bubble {
+  width:28px; height:28px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:500;
+  border:1.5px solid var(--border); color:var(--muted);
+  background:var(--surface); transition:all .2s;
+}
+.step-bubble.active { border-color:var(--accent); color:var(--accent); background:#1a150a; }
+.step-bubble.done   { border-color:var(--success); color:var(--success); background:#0f2a18; }
+.step-line { flex:1; height:1px; background:var(--border); }
+.step-line.done { background:var(--success); }
+.steps-label {
+  display:flex; justify-content:space-between; font-size:9px;
+  color:var(--muted); letter-spacing:.5px; margin-bottom:16px;
+  padding:0 2px;
+}
+
+/* ── Hint box ── */
+.hint-box {
+  background:#111820; border:1px solid #1e2e3a;
+  border-radius:var(--r-sm); padding:10px 12px;
+  font-size:11px; color:#6a9ab0; display:flex; gap:8px;
+  align-items:flex-start; line-height:1.6;
+}
+
+/* ── Calendar ── */
+.month-nav {
+  display:flex; align-items:center; justify-content:space-between; padding:4px 0;
+}
+.month-label { font-family:var(--serif); font-size:18px; }
+.month-btn {
+  width:34px; height:34px; border:1px solid var(--border); border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--muted); font-size:16px;
+  background:none; transition:all .2s;
+}
+.month-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+.cal-header { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; margin:8px 0 4px; }
+.cal-hd { text-align:center; font-size:9px; color:var(--muted); letter-spacing:1px; padding:4px 0; }
+
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+.cal-day {
+  aspect-ratio:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  border-radius:var(--r-sm); font-size:13px; cursor:pointer;
+  transition:all .15s; border:1.5px solid transparent;
+  position:relative; user-select:none;
+}
+.cal-day.available {
+  color:var(--text); background:var(--surface);
+  border-color:var(--border);
+}
+.cal-day.available:hover { border-color:var(--accent); background:#191510; }
+.cal-day.booked {
+  color:var(--muted); background:var(--bg);
+  border-color:var(--border); opacity:.35; cursor:not-allowed;
+}
+.cal-day.empty { cursor:default; }
+
+/* Selected states */
+.cal-day.sel-half {
+  background:linear-gradient(135deg,#2a1e08,#1a1208);
+  border-color:var(--accent); color:var(--accent);
+}
+.cal-day.sel-full {
+  background:var(--accent); border-color:var(--accent); color:#0d0d0d;
+}
+
+/* Day number */
+.cal-day .day-num { font-size:13px; line-height:1; font-weight:500; }
+/* Tiny badge below number */
+.cal-day .day-badge {
+  font-size:7px; letter-spacing:.3px; margin-top:2px; line-height:1;
+  opacity:.85;
+}
+.cal-day.sel-half .day-badge { color:var(--accent); }
+.cal-day.sel-full .day-badge { color:#0d0d0d; }
+
+/* Legend */
+.legend { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; font-size:9px; color:var(--muted); }
+.legend-item { display:flex; align-items:center; gap:5px; }
+.legend-dot { width:10px; height:10px; border-radius:3px; border:1.5px solid; }
+.ld-avail  { background:var(--surface); border-color:var(--border); }
+.ld-half   { background:#2a1e08; border-color:var(--accent); }
+.ld-full   { background:var(--accent); border-color:var(--accent); }
+.ld-booked { background:var(--bg); border-color:var(--border); opacity:.4; }
+
+/* ── Day-type chooser (shown after tap) ── */
+.type-chooser {
+  display:none; /* shown via JS */
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:var(--r-md); padding:14px; margin-top:12px;
+}
+.type-chooser.visible { display:block; }
+.type-chooser-title {
+  font-family:var(--serif); font-size:15px; margin-bottom:10px;
+  display:flex; align-items:center; gap:8px;
+}
+.type-btns { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.type-btn {
+  border:1.5px solid var(--border); border-radius:var(--r-sm);
+  padding:12px 10px; cursor:pointer; transition:all .2s; text-align:center;
+}
+.type-btn:hover { border-color:var(--border-hi); }
+.type-btn.half-active { border-color:var(--accent); background:#1a150a; }
+.type-btn.full-active { border-color:var(--accent); background:var(--accent); }
+.type-btn-icon { font-size:20px; margin-bottom:4px; }
+.type-btn-name { font-size:11px; font-weight:500; }
+.type-btn-name.full-active { color:#0d0d0d; }
+.type-btn-hrs { font-size:9px; color:var(--muted); margin-top:2px; }
+.type-btn.full-active .type-btn-hrs { color:rgba(0,0,0,.6); }
+.type-btn-price { font-family:var(--serif); font-size:16px; color:var(--accent); margin-top:4px; }
+.type-btn.full-active .type-btn-price { color:#0d0d0d; }
+.type-remove {
+  display:flex; align-items:center; justify-content:center; gap:5px;
+  margin-top:8px; font-size:10px; color:var(--muted); cursor:pointer;
+  padding:6px; border-radius:var(--r-sm); transition:color .2s;
+}
+.type-remove:hover { color:var(--danger); }
+
+/* ── Booking summary list ── */
+.booking-list { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+.booking-item {
+  display:flex; align-items:center; gap:10px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-sm); padding:10px 12px;
+  animation:fadeUp .25s ease both;
+}
+.booking-item-date { flex:1; }
+.booking-item-day  { font-size:12px; font-weight:500; }
+.booking-item-info { font-size:10px; color:var(--muted); margin-top:2px; }
+.booking-item-pkg  {
+  font-size:10px; letter-spacing:.5px; padding:3px 9px;
+  border-radius:99px; flex-shrink:0;
+}
+.pkg-badge-half { background:#2a1e08; color:var(--accent); border:1px solid #3a2e18; }
+.pkg-badge-full { background:var(--accent); color:#0d0d0d; }
+.booking-item-price { font-family:var(--serif); font-size:14px; color:var(--accent); flex-shrink:0; min-width:56px; text-align:right; }
+.booking-item-del {
+  width:26px; height:26px; border-radius:50%;
+  border:1px solid var(--border); background:none;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; color:var(--muted); cursor:pointer; flex-shrink:0;
+  transition:all .2s;
+}
+.booking-item-del:hover { border-color:var(--danger); color:var(--danger); }
+
+/* ── Cost summary card ── */
+.cost-summary {
+  background:linear-gradient(135deg,#1a150a,#201808);
+  border:1px solid #3a2e18; border-radius:var(--r-md); padding:14px;
+  margin-top:10px;
+}
+.cost-row-s {
+  display:flex; justify-content:space-between; font-size:11px;
+  padding:4px 0; color:var(--muted);
+}
+.cost-row-s .cv { color:var(--text); font-family:var(--mono); }
+.cost-total-row {
+  display:flex; justify-content:space-between;
+  border-top:1px solid #3a2e18; margin-top:6px; padding-top:10px;
+}
+.cost-total-row .ct-label { font-size:13px; color:var(--text); }
+.cost-total-row .ct-val { font-family:var(--serif); font-size:22px; color:var(--accent); }
+
+/* Empty state */
+.empty-state {
+  text-align:center; padding:20px; color:var(--muted); font-size:12px; line-height:1.8;
+}
+.empty-state .es-icon { font-size:32px; margin-bottom:8px; opacity:.4; }
+
+/* Start time manual input */
+.time-input-row {
+  display:flex; align-items:center; gap:10px; margin-top:10px;
+}
+.time-input-row label { font-size:10px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; flex-shrink:0; }
+.time-input {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-sm); padding:9px 12px;
+  font-family:var(--mono); font-size:13px; color:var(--text);
+  outline:none; flex:1; transition:border-color .2s;
+}
+.time-input:focus { border-color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="shell"><div class="phone">
+
+  <div class="status-bar">
+    <span class="time">9:45</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+
+  <div class="top-nav">
+    <a href="02-profile.html" class="back-btn">←</a>
+    <span class="nav-title">Pick Your Days</span>
+    <span class="nav-action" style="color:var(--muted)">Step 1 of 3</span>
+  </div>
+
+  <div class="content">
+
+    <!-- Photographer pill (populated from session) -->
+    <div class="ctx-pill fade-up">
+      <span class="ctx-avatar" id="ctxAvatar">📷</span>
+      <div>
+        <div class="ctx-name" id="ctxName">Sofia Reyes</div>
+        <div class="ctx-avail">● Available this month</div>
+      </div>
+      <div style="margin-left:auto;text-align:right">
+        <div style="font-size:10px;color:var(--muted)">rates</div>
+        <div style="font-family:var(--serif);font-size:13px;color:var(--accent)" id="ctxRates">₹17,280 / ₹34,560</div>
+        <div style="font-size:8px;color:var(--muted)">Half Day / Full Day</div>
+      </div>
+    </div>
+
+    <!-- Step indicator -->
+    <div class="steps mt-16 fade-up-2">
+      <div class="step-bubble active">1</div>
+      <div class="step-line"></div>
+      <div class="step-bubble">2</div>
+      <div class="step-line"></div>
+      <div class="step-bubble">3</div>
+    </div>
+    <div class="steps-label fade-up-2">
+      <span style="color:var(--accent)">Choose Days</span>
+      <span>Shoot Details</span>
+      <span>Review & Pay</span>
+    </div>
+
+    <!-- How-to hint -->
+    <div class="hint-box fade-up-2">
+      <span style="font-size:16px;flex-shrink:0">💡</span>
+      <span>Tap any <strong style="color:var(--text)">green date</strong> on the calendar. You'll then choose <strong style="color:var(--text)">Half Day</strong> (6 hrs) or <strong style="color:var(--text)">Full Day</strong> (12 hrs) for that day. You can pick as many days as you need!</span>
+    </div>
+
+    <!-- Calendar -->
+    <div class="month-nav mt-16 fade-up-3">
+      <button class="month-btn" onclick="prevMonth()">‹</button>
+      <span class="month-label" id="monthLabel">May 2026</span>
+      <button class="month-btn" onclick="nextMonth()">›</button>
+    </div>
+
+    <div class="cal-header fade-up-3">
+      <div class="cal-hd">SU</div><div class="cal-hd">MO</div><div class="cal-hd">TU</div>
+      <div class="cal-hd">WE</div><div class="cal-hd">TH</div><div class="cal-hd">FR</div><div class="cal-hd">SA</div>
+    </div>
+    <div class="cal-grid fade-up-3" id="calGrid"></div>
+
+    <div class="legend fade-up-3" style="margin-top:10px">
+      <div class="legend-item"><div class="legend-dot ld-avail"></div>Free</div>
+      <div class="legend-item"><div class="legend-dot ld-half"></div>Half Day picked</div>
+      <div class="legend-item"><div class="legend-dot ld-full"></div>Full Day picked</div>
+      <div class="legend-item"><div class="legend-dot ld-booked"></div>Already booked</div>
+    </div>
+
+    <!-- Day-type chooser (appears after tapping a date) -->
+    <div class="type-chooser" id="typeChooser">
+      <div class="type-chooser-title">
+        <span id="chooserDateLabel">Wed, 21 May</span>
+        <span style="font-size:11px;color:var(--muted);margin-left:auto">Pick a package</span>
+      </div>
+      <div class="type-btns">
+        <div class="type-btn" id="halfBtn" onclick="assignType('half')">
+          <div class="type-btn-icon">🌤</div>
+          <div class="type-btn-name">Half Day</div>
+          <div class="type-btn-hrs">6 hours</div>
+          <div class="type-btn-price">₹17,280</div>
+        </div>
+        <div class="type-btn" id="fullBtn" onclick="assignType('full')">
+          <div class="type-btn-icon">☀️</div>
+          <div class="type-btn-name">Full Day</div>
+          <div class="type-btn-hrs">12 hours</div>
+          <div class="type-btn-price">₹34,560</div>
+        </div>
+      </div>
+      <!-- Manual start time -->
+      <div class="time-input-row">
+        <label>Start Time</label>
+        <input class="time-input" type="time" id="startTimeInput" value="09:00">
+        <span style="font-size:10px;color:var(--muted)">24hr</span>
+      </div>
+      <div class="type-remove" id="removeBtn" onclick="removeDay()" style="display:none">
+        <span>✕</span> Remove this day
+      </div>
+    </div>
+
+    <hr class="divider fade-up-4">
+
+    <!-- Booking summary -->
+    <div class="fade-up-4">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <p class="section-label" style="margin:0">Your Booking Summary</p>
+        <span id="dayCount" style="font-size:10px;color:var(--muted)">0 days selected</span>
+      </div>
+
+      <div class="booking-list" id="bookingList">
+        <div class="empty-state" id="emptyState">
+          <div class="es-icon">📅</div>
+          <div>No days selected yet.<br>Tap a green date above to start.</div>
+        </div>
+      </div>
+
+      <!-- Cost summary (hidden until days selected) -->
+      <div class="cost-summary" id="costSummary" style="display:none">
+        <div class="cost-row-s">
+          <span id="halfDayLine">Half Day(s)</span>
+          <span class="cv" id="halfDayCost">—</span>
+        </div>
+        <div class="cost-row-s">
+          <span id="fullDayLine">Full Day(s)</span>
+          <span class="cv" id="fullDayCost">—</span>
+        </div>
+        <div class="cost-row-s">
+          <span>Extra hour rate</span>
+          <span class="cv">₹2,880 / hr</span>
+        </div>
+        <div class="cost-total-row">
+          <span class="ct-label">Subtotal</span>
+          <span class="ct-val" id="subtotalVal">₹0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <button class="btn btn-primary mt-16 fade-up-5" id="continueBtn"
+       style="opacity:.4;pointer-events:none" onclick="saveAndContinue()">
+      CONTINUE TO DETAILS →
+    </button>
+    <p id="continueTip" style="text-align:center;font-size:10px;color:var(--muted);margin-top:8px">
+      Select at least one day to continue
+    </p>
+
+    <div style="height:24px"></div>
+  </div>
+
+</div></div>
+
+<script>
+/* ─────────────────────────────────────────
+   DATA
+───────────────────────────────────────── */
+// Booked dates for Sofia (day numbers in May 2026 for demo)
+const BOOKED_DAYS = [1,2,3,7,8,11,12,13,15,16,17,20,23,25,28,29,31];
+// Days of week May 2026 starts on (Friday = 5)
+const MAY_START_DOW = 5;
+const MAY_DAYS = 31;
+
+const HALF_PRICE = 17280;
+const FULL_PRICE = 34560;
+
+// user selections: { '2026-05-21': { type:'half'|'full', startTime:'09:00', label:'Wed, 21 May' } }
+let selections = {};
+let activeDayKey = null; // which day the chooser is open for
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+let viewMonth = 4; // 0-indexed, May = 4
+let viewYear  = 2026;
+
+/* ─────────────────────────────────────────
+   CALENDAR RENDER
+───────────────────────────────────────── */
+function renderCalendar() {
+  const grid = document.getElementById('calGrid');
+  document.getElementById('monthLabel').textContent = MONTHS[viewMonth] + ' ' + viewYear;
+  grid.innerHTML = '';
+
+  // Compute first day of month
+  const firstDow = new Date(viewYear, viewMonth, 1).getDay();
+  const totalDays = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+  // Empty cells
+  for (let i = 0; i < firstDow; i++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day empty';
+    grid.appendChild(el);
+  }
+
+  // Day cells
+  for (let d = 1; d <= totalDays; d++) {
+    const key = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const el  = document.createElement('div');
+    el.dataset.key = key;
+    el.dataset.day = d;
+
+    const isBooked = (viewMonth === 4 && viewYear === 2026) && BOOKED_DAYS.includes(d);
+    const sel = selections[key];
+
+    if (isBooked) {
+      el.className = 'cal-day booked';
+      el.innerHTML = `<span class="day-num">${d}</span><span class="day-badge">Booked</span>`;
+    } else if (sel) {
+      if (sel.type === 'half') {
+        el.className = 'cal-day sel-half';
+        el.innerHTML = `<span class="day-num">${d}</span><span class="day-badge">½ Day</span>`;
+      } else {
+        el.className = 'cal-day sel-full';
+        el.innerHTML = `<span class="day-num">${d}</span><span class="day-badge">Full</span>`;
+      }
+      el.addEventListener('click', () => openChooser(key, el));
+    } else {
+      el.className = 'cal-day available';
+      el.innerHTML = `<span class="day-num">${d}</span>`;
+      el.addEventListener('click', () => openChooser(key, el));
+    }
+    grid.appendChild(el);
+  }
+}
+
+function prevMonth() {
+  viewMonth--;
+  if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+  closeChooser();
+  renderCalendar();
+}
+function nextMonth() {
+  viewMonth++;
+  if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+  closeChooser();
+  renderCalendar();
+}
+
+/* ─────────────────────────────────────────
+   CHOOSER (half / full picker)
+───────────────────────────────────────── */
+function openChooser(key, el) {
+  activeDayKey = key;
+  const [y, m, d] = key.split('-').map(Number);
+  const dow = new Date(y, m-1, d).getDay();
+  const label = `${DAYS_SHORT[dow]}, ${d} ${MONTHS[m-1]}`;
+
+  document.getElementById('chooserDateLabel').textContent = label;
+
+  // Restore previous selection if any
+  const prev = selections[key];
+  resetTypeUI();
+  if (prev) {
+    highlightType(prev.type);
+    document.getElementById('startTimeInput').value = prev.startTime || '09:00';
+    document.getElementById('removeBtn').style.display = 'flex';
+  } else {
+    document.getElementById('startTimeInput').value = '09:00';
+    document.getElementById('removeBtn').style.display = 'none';
+  }
+
+  const chooser = document.getElementById('typeChooser');
+  chooser.classList.add('visible');
+  chooser.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function closeChooser() {
+  document.getElementById('typeChooser').classList.remove('visible');
+  activeDayKey = null;
+}
+
+function resetTypeUI() {
+  document.getElementById('halfBtn').className = 'type-btn';
+  document.getElementById('fullBtn').className = 'type-btn';
+  document.querySelector('#halfBtn .type-btn-name').className = 'type-btn-name';
+  document.querySelector('#fullBtn .type-btn-name').className = 'type-btn-name';
+}
+
+function highlightType(type) {
+  if (type === 'half') {
+    document.getElementById('halfBtn').classList.add('half-active');
+  } else {
+    document.getElementById('fullBtn').classList.add('full-active');
+    document.querySelector('#fullBtn .type-btn-name').classList.add('full-active');
+  }
+}
+
+function assignType(type) {
+  if (!activeDayKey) return;
+
+  const [y, m, d] = activeDayKey.split('-').map(Number);
+  const dow   = new Date(y, m-1, d).getDay();
+  const label = `${DAYS_SHORT[dow]}, ${String(d).padStart(2,'0')} ${MONTHS[m-1]}`;
+  const time  = document.getElementById('startTimeInput').value;
+
+  selections[activeDayKey] = { type, startTime: time, label, day: d, month: m, year: y };
+
+  resetTypeUI();
+  highlightType(type);
+  document.getElementById('removeBtn').style.display = 'flex';
+
+  renderCalendar();
+  renderSummary();
+
+  // Re-open chooser on the newly rendered cell
+  const newCell = document.querySelector(`[data-key="${activeDayKey}"]`);
+  if (newCell) {
+    activeDayKey = activeDayKey; // keep ref
+    // re-attach listener state by re-calling
+    const chooser = document.getElementById('typeChooser');
+    chooser.classList.add('visible');
+  }
+}
+
+function removeDay() {
+  if (!activeDayKey) return;
+  delete selections[activeDayKey];
+  closeChooser();
+  renderCalendar();
+  renderSummary();
+}
+
+/* ─────────────────────────────────────────
+   SUMMARY
+───────────────────────────────────────── */
+function renderSummary() {
+  const keys = Object.keys(selections).sort();
+  const list  = document.getElementById('bookingList');
+  const empty = document.getElementById('emptyState');
+  const cost  = document.getElementById('costSummary');
+  const cont  = document.getElementById('continueBtn');
+  const tip   = document.getElementById('continueTip');
+  const count = document.getElementById('dayCount');
+
+  // Day count label
+  const n = keys.length;
+  count.textContent = n === 0 ? '0 days selected' : `${n} day${n>1?'s':''} selected`;
+
+  if (n === 0) {
+    empty.style.display = 'block';
+    cost.style.display  = 'none';
+    cont.style.opacity  = '.4';
+    cont.style.pointerEvents = 'none';
+    tip.style.display   = 'block';
+    // Clear dynamic rows
+    list.querySelectorAll('.booking-item').forEach(el => el.remove());
+    return;
+  }
+
+  empty.style.display = 'none';
+  cost.style.display  = 'block';
+  cont.style.opacity  = '1';
+  cont.style.pointerEvents = 'auto';
+  tip.style.display   = 'none';
+
+  // Rebuild list items
+  list.querySelectorAll('.booking-item').forEach(el => el.remove());
+
+  let halfCount = 0, fullCount = 0;
+
+  keys.forEach(key => {
+    const s = selections[key];
+    const price = s.type === 'half' ? HALF_PRICE : FULL_PRICE;
+    if (s.type === 'half') halfCount++; else fullCount++;
+
+    // Format time
+    const [hh, mm] = s.startTime.split(':').map(Number);
+    const ampm = hh >= 12 ? 'PM' : 'AM';
+    const h12  = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
+    const timeStr = `${h12}:${String(mm).padStart(2,'0')} ${ampm}`;
+
+    const endHrs  = s.type === 'half' ? 6 : 12;
+    const endHour = hh + endHrs;
+    const endAmpm = endHour >= 12 ? 'PM' : 'AM';
+    const eH12    = endHour === 0 ? 12 : endHour > 12 ? endHour - 12 : endHour;
+    const endStr  = `${eH12}:${String(mm).padStart(2,'0')} ${endAmpm}`;
+
+    const item = document.createElement('div');
+    item.className = 'booking-item';
+    item.innerHTML = `
+      <div class="booking-item-date">
+        <div class="booking-item-day">${s.label}</div>
+        <div class="booking-item-info">
+          ${timeStr} – ${endStr} &nbsp;·&nbsp; ${s.type === 'half' ? '6 hrs' : '12 hrs'}
+        </div>
+      </div>
+      <span class="booking-item-pkg ${s.type === 'half' ? 'pkg-badge-half' : 'pkg-badge-full'}">
+        ${s.type === 'half' ? 'Half Day' : 'Full Day'}
+      </span>
+      <div class="booking-item-price">₹${price.toLocaleString('en-IN')}</div>
+      <button class="booking-item-del" onclick="deleteSel('${key}')" title="Remove">✕</button>
+    `;
+    list.appendChild(item);
+  });
+
+  // Cost summary
+  const halfTotal = halfCount * HALF_PRICE;
+  const fullTotal = fullCount * FULL_PRICE;
+  const subtotal  = halfTotal + fullTotal;
+
+  document.getElementById('halfDayLine').textContent = halfCount > 0
+    ? `Half Day × ${halfCount}` : 'Half Day';
+  document.getElementById('halfDayCost').textContent = halfCount > 0
+    ? '₹' + halfTotal.toLocaleString('en-IN') : '—';
+
+  document.getElementById('fullDayLine').textContent = fullCount > 0
+    ? `Full Day × ${fullCount}` : 'Full Day';
+  document.getElementById('fullDayCost').textContent = fullCount > 0
+    ? '₹' + fullTotal.toLocaleString('en-IN') : '—';
+
+  document.getElementById('subtotalVal').textContent = '₹' + subtotal.toLocaleString('en-IN');
+}
+
+function deleteSel(key) {
+  delete selections[key];
+  if (activeDayKey === key) closeChooser();
+  renderCalendar();
+  renderSummary();
+}
+
+/* ─────────────────────────────────────────
+   SAVE TO sessionStorage & NAVIGATE
+───────────────────────────────────────── */
+function saveAndContinue() {
+  if (Object.keys(selections).length === 0) return;
+  try {
+    sessionStorage.setItem('lensly_days', JSON.stringify(selections));
+  } catch(e) {}
+  window.location.href = '04-details.html';
+}
+
+/* ─────────────────────────────────────────
+   RESTORE selections if user comes back
+───────────────────────────────────────── */
+function restoreSelections() {
+  try {
+    const raw = sessionStorage.getItem('lensly_days');
+    if (raw) {
+      const saved = JSON.parse(raw);
+      Object.assign(selections, saved);
+    }
+  } catch(e) {}
+}
+
+/* ─────────────────────────────────────────
+   INIT
+───────────────────────────────────────── */
+restoreSelections();
+renderCalendar();
+renderSummary();
+</script>
+</body>
+</html>

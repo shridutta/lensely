@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lensly X — Feed</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+
+.brand-row { display:flex; align-items:center; justify-content:space-between; padding:0 20px; }
+.brand-mark { display:flex; align-items:baseline; gap:4px; font-family:var(--serif); font-size:15px; letter-spacing:1px; }
+.brand-mark .lensly { color:var(--muted); font-weight:300; }
+.brand-mark .x { color:var(--accent); font-weight:600; font-size:17px; border:1px solid var(--accent); border-radius:4px; padding:0px 6px; line-height:1.5; margin-left:2px; }
+.header-icons { display:flex; gap:10px; align-items:center; }
+.header-icon-btn {
+  width:34px; height:34px; border-radius:50%; border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center; font-size:15px;
+  cursor:pointer; transition:border-color .2s; position:relative;
+}
+.header-icon-btn:hover { border-color:var(--accent); }
+.header-icon-btn .dot { position:absolute; top:5px; right:6px; width:7px; height:7px; background:var(--accent); border-radius:50%; border:1.5px solid var(--bg); }
+
+/* ── Stories row ── */
+.stories-row { display:flex; gap:14px; padding:14px 20px 4px; overflow-x:auto; }
+.story-item { display:flex; flex-direction:column; align-items:center; gap:5px; flex-shrink:0; }
+.story-ring {
+  width:54px; height:54px; border-radius:50%;
+  background:conic-gradient(from 180deg, var(--accent), #e8c88a, var(--accent));
+  display:flex; align-items:center; justify-content:center; padding:2px;
+}
+.story-ring.seen { background:var(--border); }
+.story-avatar {
+  width:100%; height:100%; border-radius:50%; background:var(--surface2);
+  border:2px solid var(--bg); display:flex; align-items:center; justify-content:center; font-size:20px;
+}
+.story-name { font-size:8.5px; color:var(--muted); max-width:54px; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* ── Post card ── */
+.post-card { border-bottom:1px solid var(--border); padding-bottom:14px; margin-bottom:14px; }
+.post-header { display:flex; align-items:center; gap:10px; padding:0 20px; margin-bottom:10px; }
+.post-avatar { width:36px; height:36px; border-radius:50%; background:var(--surface2); border:1px solid var(--border-hi); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.post-author-info { flex:1; min-width:0; }
+.post-author { font-size:12px; font-weight:500; }
+.post-loc { font-size:9px; color:var(--muted); margin-top:1px; }
+.post-menu { color:var(--muted); font-size:16px; cursor:pointer; }
+
+.post-image {
+  width:100%; aspect-ratio:1; margin-top:2px;
+  display:flex; align-items:center; justify-content:center; font-size:36px; opacity:.5;
+}
+.pi1 { background:linear-gradient(135deg,#1e1810,#2a2215); }
+.pi2 { background:linear-gradient(135deg,#111a1e,#15242a); }
+.pi3 { background:linear-gradient(135deg,#1a1118,#251520); }
+.pi4 { background:linear-gradient(135deg,#111810,#162014); }
+
+.post-actions { display:flex; align-items:center; gap:16px; padding:12px 20px 0; }
+.post-action-icon { font-size:21px; cursor:pointer; transition:transform .15s; color:var(--text); }
+.post-action-icon:hover { transform:scale(1.1); }
+.post-action-icon.liked { color:#c0566a; }
+.post-bookmark { margin-left:auto; }
+
+.post-likes { padding:8px 20px 0; font-size:11px; font-weight:500; }
+.post-caption { padding:5px 20px 0; font-size:11.5px; line-height:1.6; }
+.post-caption strong { font-weight:500; }
+.post-comments-link { padding:5px 20px 0; font-size:10.5px; color:var(--muted); cursor:pointer; }
+.post-time { padding:6px 20px 0; font-size:9px; color:var(--muted); letter-spacing:.5px; text-transform:uppercase; }
+
+/* ── Sponsored / Ad card ── */
+.ad-card {
+  margin:0 20px 14px; background:linear-gradient(135deg,#1a150a,#201808);
+  border:1px solid #3a2e18; border-radius:var(--r-md); padding:16px; position:relative; overflow:hidden;
+}
+.ad-card::before { content:''; position:absolute; right:-20px; top:-20px; width:100px; height:100px; border:1px solid #3a2e18; border-radius:50%; opacity:.4; }
+.ad-badge { font-size:8px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent); background:#2a1e08; border:1px solid #3a2e18; border-radius:3px; padding:2px 7px; }
+.ad-brand-row { display:flex; align-items:center; gap:10px; margin-top:10px; }
+.ad-brand-icon { width:40px; height:40px; border-radius:var(--r-sm); background:var(--surface); border:1px solid var(--border-hi); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.ad-brand-name { font-family:var(--serif); font-size:15px; }
+.ad-brand-tag { font-size:9px; color:var(--muted); margin-top:1px; }
+.ad-desc { font-size:11px; color:var(--text); line-height:1.6; margin-top:10px; }
+.ad-cta {
+  display:inline-flex; align-items:center; gap:6px; margin-top:12px;
+  background:var(--accent); color:#0d0d0d; padding:9px 18px; border-radius:var(--r-sm);
+  font-family:var(--mono); font-size:10px; letter-spacing:1.5px; text-transform:uppercase;
+  text-decoration:none; cursor:pointer; transition:background .2s;
+}
+.ad-cta:hover { background:var(--accent2); }
+
+/* ── Composer FAB ── */
+.compose-fab {
+  position:fixed; bottom:80px; right:calc(50% - 195px + 16px);
+  width:50px; height:50px; background:var(--accent); border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:22px; color:#0d0d0d;
+  cursor:pointer; box-shadow:0 4px 18px rgba(201,169,110,.4); z-index:50; border:none; transition:all .2s;
+}
+.compose-fab:hover { background:var(--accent2); transform:scale(1.05); }
+
+</style>
+</head>
+<body>
+<div class="shell"><div class="phone">
+
+  <div class="status-bar">
+    <span class="time">9:30</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+
+  <div class="brand-row fade-up" style="padding-top:4px">
+    <div class="brand-mark"><span class="lensly">LENSLY</span><span class="x">X</span></div>
+    <div class="header-icons">
+      <div class="header-icon-btn">🔔<div class="dot"></div></div>
+      <div class="header-icon-btn">✉️</div>
+    </div>
+  </div>
+
+  <div class="content" style="padding:0 0 20px">
+
+    <!-- Stories -->
+    <div class="stories-row fade-up-2">
+      <div class="story-item">
+        <div class="story-ring"><div class="story-avatar" style="border-style:dashed">＋</div></div>
+        <div class="story-name">Your Story</div>
+      </div>
+      <div class="story-item">
+        <div class="story-ring"><div class="story-avatar">📷</div></div>
+        <div class="story-name">Marcus L.</div>
+      </div>
+      <div class="story-item">
+        <div class="story-ring"><div class="story-avatar">🌿</div></div>
+        <div class="story-name">Priya N.</div>
+      </div>
+      <div class="story-item">
+        <div class="story-ring seen"><div class="story-avatar">💍</div></div>
+        <div class="story-name">Elena V.</div>
+      </div>
+      <div class="story-item">
+        <div class="story-ring seen"><div class="story-avatar">🌆</div></div>
+        <div class="story-name">David K.</div>
+      </div>
+    </div>
+
+    <div style="height:6px"></div>
+
+    <!-- Post 1 -->
+    <div class="post-card fade-up-3">
+      <div class="post-header">
+        <div class="post-avatar">📷</div>
+        <div class="post-author-info">
+          <div class="post-author">sofia.reyes</div>
+          <div class="post-loc">Taj Lands End, Mumbai</div>
+        </div>
+        <span class="post-menu">⋯</span>
+      </div>
+      <div class="post-image pi1">🖼</div>
+      <div class="post-actions">
+        <span class="post-action-icon liked" onclick="toggleLike(this)">♥</span>
+        <span class="post-action-icon">💬</span>
+        <span class="post-action-icon">↗</span>
+        <span class="post-action-icon post-bookmark">🔖</span>
+      </div>
+      <div class="post-likes">1,204 likes</div>
+      <div class="post-caption"><strong>sofia.reyes</strong> Golden hour at the sea face never disappoints ✨ #weddingphotography #mumbai</div>
+      <div class="post-comments-link">View all 38 comments</div>
+      <div class="post-time">2 hours ago</div>
+    </div>
+
+    <!-- Sponsored Ad 1 -->
+    <div class="ad-card fade-up-3">
+      <span class="ad-badge">Sponsored</span>
+      <div class="ad-brand-row">
+        <div class="ad-brand-icon">⚡</div>
+        <div>
+          <div class="ad-brand-name">Godox India</div>
+          <div class="ad-brand-tag">Lighting &amp; Flash Equipment</div>
+        </div>
+      </div>
+      <p class="ad-desc">The AD600 Pro is now 15% off for Lensly photographers. Outdoor strobe trusted by 2,000+ professionals.</p>
+      <a href="#" class="ad-cta">Shop Now →</a>
+    </div>
+
+    <!-- Post 2 -->
+    <div class="post-card fade-up-4">
+      <div class="post-header">
+        <div class="post-avatar">🎬</div>
+        <div class="post-author-info">
+          <div class="post-author">marcus.lin.films</div>
+          <div class="post-loc">Brooklyn Bridge Park</div>
+        </div>
+        <span class="post-menu">⋯</span>
+      </div>
+      <div class="post-image pi2">🎥</div>
+      <div class="post-actions">
+        <span class="post-action-icon" onclick="toggleLike(this)">♡</span>
+        <span class="post-action-icon">💬</span>
+        <span class="post-action-icon">↗</span>
+        <span class="post-action-icon post-bookmark">🔖</span>
+      </div>
+      <div class="post-likes">892 likes</div>
+      <div class="post-caption"><strong>marcus.lin.films</strong> Behind the scenes from yesterday's corporate shoot 🎬</div>
+      <div class="post-comments-link">View all 12 comments</div>
+      <div class="post-time">5 hours ago</div>
+    </div>
+
+    <!-- Post 3 -->
+    <div class="post-card fade-up-5">
+      <div class="post-header">
+        <div class="post-avatar">🌿</div>
+        <div class="post-author-info">
+          <div class="post-author">priya.nair.photo</div>
+          <div class="post-loc">Lonavala</div>
+        </div>
+        <span class="post-menu">⋯</span>
+      </div>
+      <div class="post-image pi3">🖼</div>
+      <div class="post-actions">
+        <span class="post-action-icon liked" onclick="toggleLike(this)">♥</span>
+        <span class="post-action-icon">💬</span>
+        <span class="post-action-icon">↗</span>
+        <span class="post-action-icon post-bookmark">🔖</span>
+      </div>
+      <div class="post-likes">2,341 likes</div>
+      <div class="post-caption"><strong>priya.nair.photo</strong> Tiny humans, big moments 🍼 Newborn session from this week.</div>
+      <div class="post-comments-link">View all 64 comments</div>
+      <div class="post-time">1 day ago</div>
+    </div>
+
+    <!-- Sponsored Ad 2 -->
+    <div class="ad-card fade-up-5">
+      <span class="ad-badge">Sponsored</span>
+      <div class="ad-brand-row">
+        <div class="ad-brand-icon">🎨</div>
+        <div>
+          <div class="ad-brand-name">LutBox Presets</div>
+          <div class="ad-brand-tag">Lightroom &amp; Premiere Presets</div>
+        </div>
+      </div>
+      <p class="ad-desc">Cinematic wedding LUT pack — used by 5,000+ Indian photographers. Free trial for Lensly members.</p>
+      <a href="#" class="ad-cta">Try Free →</a>
+    </div>
+
+    <!-- Post 4 -->
+    <div class="post-card fade-up-5" style="border-bottom:none;margin-bottom:0">
+      <div class="post-header">
+        <div class="post-avatar">🌆</div>
+        <div class="post-author-info">
+          <div class="post-author">david.kwan.arch</div>
+          <div class="post-loc">Lower Parel, Mumbai</div>
+        </div>
+        <span class="post-menu">⋯</span>
+      </div>
+      <div class="post-image pi4">🏙</div>
+      <div class="post-actions">
+        <span class="post-action-icon" onclick="toggleLike(this)">♡</span>
+        <span class="post-action-icon">💬</span>
+        <span class="post-action-icon">↗</span>
+        <span class="post-action-icon post-bookmark">🔖</span>
+      </div>
+      <div class="post-likes">567 likes</div>
+      <div class="post-caption"><strong>david.kwan.arch</strong> New commercial space shot for a client launch.</div>
+      <div class="post-comments-link">View all 9 comments</div>
+      <div class="post-time">2 days ago</div>
+    </div>
+
+  </div>
+
+  <!-- Compose FAB -->
+  <button class="compose-fab" title="New Post">＋</button>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <a href="lensly-x-feed.html" class="nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Feed
+    </a>
+    <a href="lensly-x-learning.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+      Learning
+    </a>
+    <a href="lensly-x-profile.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+      Profile
+    </a>
+    <a href="lensly-x-shop.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      Shop
+    </a>
+  </nav>
+
+</div></div>
+
+<script>
+function toggleLike(el) {
+  const isLiked = el.textContent === '♥';
+  el.textContent = isLiked ? '♡' : '♥';
+  el.classList.toggle('liked', !isLiked);
+}
+</script>
+</body>
+</html>

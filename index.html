@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lensly — Photographer Booking App</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .hub-shell {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 60px 24px 80px;
+    background: radial-gradient(ellipse at 50% -10%, #1e1710 0%, var(--bg) 60%);
+  }
+  .hub-logo { font-family: var(--serif); font-size: 48px; font-weight: 300; letter-spacing: 4px; }
+  .hub-logo span { color: var(--accent); }
+  .hub-tagline { color: var(--muted); font-size: 11px; letter-spacing: 3px; text-transform: uppercase; margin-top: 8px; }
+
+  .flow-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    max-width: 900px;
+    width: 100%;
+    margin-top: 48px;
+  }
+  .flow-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 24px;
+    text-decoration: none;
+    color: var(--text);
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .flow-card:hover {
+    border-color: var(--accent);
+    background: #191510;
+    transform: translateY(-2px);
+  }
+  .step-badge {
+    width: 36px; height: 36px;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    color: var(--accent);
+    flex-shrink: 0;
+    font-family: var(--serif);
+  }
+  .flow-card-info { flex: 1; }
+  .flow-card-title { font-family: var(--serif); font-size: 20px; font-weight: 400; margin-bottom: 4px; }
+  .flow-card-desc { font-size: 11px; color: var(--muted); line-height: 1.6; }
+  .flow-card-arrow { color: var(--muted); font-size: 18px; align-self: center; transition: color 0.2s, transform 0.2s; }
+  .flow-card:hover .flow-card-arrow { color: var(--accent); transform: translateX(4px); }
+
+  .section-sep {
+    width: 100%; max-width: 900px;
+    display: flex; align-items: center; gap: 12px;
+    margin: 32px 0 0;
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+  }
+  .section-sep::before, .section-sep::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* ── Umbrella divider ── */
+  .umbrella-divider {
+    width: 100%; max-width: 900px;
+    display: flex; align-items: center; gap: 16px;
+    margin: 56px 0 8px;
+  }
+  .umbrella-divider::before, .umbrella-divider::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-hi), transparent);
+  }
+  .umbrella-label {
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); white-space: nowrap;
+  }
+
+  /* ── Sub-project card (Lensly X) ── */
+  .subproject-card {
+    width: 100%; max-width: 900px;
+    background: linear-gradient(135deg, #161310 0%, #0d0d0d 100%);
+    border: 1px solid var(--border-hi);
+    border-radius: var(--r-lg);
+    padding: 28px;
+    margin-top: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .subproject-card::before {
+    content: '';
+    position: absolute; top: -40%; right: -10%;
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(201,169,110,.08), transparent 70%);
+  }
+  .subproject-brand {
+    display: flex; align-items: baseline; gap: 6px;
+    font-family: var(--serif); font-size: 28px;
+  }
+  .subproject-brand .lensly { color: var(--muted); font-weight: 300; }
+  .subproject-brand .x {
+    color: var(--accent); font-weight: 600;
+    border: 1.5px solid var(--accent); border-radius: 6px;
+    padding: 0px 10px; font-size: 24px; margin-left: 2px;
+  }
+  .subproject-tagline {
+    font-size: 11px; color: var(--muted); letter-spacing: 1.5px;
+    text-transform: uppercase; margin-top: 6px;
+  }
+  .subproject-desc {
+    font-size: 12px; color: var(--text); line-height: 1.7;
+    margin-top: 14px; max-width: 520px;
+  }
+  .subproject-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 18px; padding: 11px 22px;
+    background: var(--accent); color: #0d0d0d;
+    border-radius: var(--r-sm); text-decoration: none;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 2px; text-transform: uppercase;
+    transition: background .2s;
+  }
+  .subproject-cta:hover { background: var(--accent2); }
+</style>
+</head>
+<body>
+<div class="hub-shell">
+  <div class="fade-up" style="text-align:center">
+    <div class="hub-logo">LENS<span>LY</span></div>
+    <div class="hub-tagline">Photographer Booking — UI Prototype</div>
+  </div>
+
+  <div class="section-sep fade-up-2">Get Started</div>
+
+  <div class="flow-grid fade-up-3">
+    <a class="flow-card" href="00-services.html">
+      <div class="step-badge">00</div>
+      <div class="flow-card-info">
+        <div class="flow-card-title">Select Service Type</div>
+        <div class="flow-card-desc">Photographer, cinematographer, drone pilot, candid, traditional & more — pick the one you need.</div>
+      </div>
+      <div class="flow-card-arrow">→</div>
+    </a>
+  </div>
+
+  <div class="section-sep fade-up-3">Discovery</div>
+
+  <div class="flow-grid fade-up-3">
+    <a class="flow-card" href="01-home.html">
+      <div class="step-badge">01</div>
+      <div class="flow-card-info">
+        <div class="flow-card-title">Home & Search</div>
+        <div class="flow-card-desc">Browse photographers by style, shoot type, and location. Featured picks and filters.</div>
+      </div>
+      <div class="flow-card-arrow">→</div>
+    </a>
+    <a class="flow-card" href="02-profile.html">
+      <div class="step-badge">02</div>
+      <div class="flow-card-info">
+        <div class="flow-card-title">Photographer Profile</div>
+        <div class="flow-card-desc">Portfolio grid, packages, reviews, and a CTA to book or check availability.</div>
+      </div>
+      <div class="flow-card-arrow">→</div>
+    </a>
+    <a class="flow-card" href="03-datetime.html">
+      <div class="step-badge">03</div>
+      <div class="flow-card-info">
+        <div class="flow-card-title">Date & Time</div>
+        <div class="flow-card-desc">Interactive calendar, available time slots, and package selection.</div>
+      </div>
+      <div class="flow-card-arrow">→</div>
+    </a>
+  </div>
+
+  <div class="section-sep fade-up-4">Checkout</div>
+
+  <div class="flow-grid fade-up-5">
+    <a class="flow-card" href="04-details.html">
+      <div class="step-badge">04</div>
+      <div class="flow-card-info">
+        <div class="flow-card-title">Shoot Details</div>
+        <div class="flow-card-desc">Location, purpose, outfit count, and any special notes for the photographer.</div>
+      </div>
+      <div class="flow-card-arrow">→</div>
+    </a>
+    <a class="flow-card" href="05-review.html">
+      <div class="step-badge">05</div>
+      <div class="flow-card-info">
+        <div class="flow-card-title">Review & Pay</div>
+        <div class="flow-card-desc">Booking summary, cost breakdown, payment method, and confirm button.</div>
+      </div>
+      <div class="flow-card-arrow">→</div>
+    </a>
+    <a class="flow-card" href="06-confirm.html">
+      <div class="step-badge">06</div>
+      <div class="flow-card-info">
+        <div class="flow-card-title">Confirmation</div>
+        <div class="flow-card-desc">Booking confirmed with reference ID, message photographer, and add to calendar.</div>
+      </div>
+      <div class="flow-card-arrow">→</div>
+    </a>
+  </div>
+
+  <div class="umbrella-divider fade-up-6">
+    <span class="umbrella-label">Also Under Lensly</span>
+  </div>
+
+  <div class="subproject-card fade-up-6">
+    <div class="subproject-brand">
+      <span class="lensly">LENSLY</span><span class="x">X</span>
+    </div>
+    <div class="subproject-tagline">For Freelance Professionals</div>
+    <p class="subproject-desc">
+      A dedicated app for the photographers, cinematographers, and crew on Lensly's roster — built so they can manage booking requests, confirm shoots, and track earnings without any clutter. One tap to accept, one tap to decline.
+    </p>
+    <a class="subproject-cta" href="lensly-x-feed.html">Open Lensly X →</a>
+
+    <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">4 Main Sections</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+        <a href="lensly-x-feed.html" style="text-decoration:none;text-align:center;padding:10px 4px;border:1px solid var(--border);border-radius:var(--r-sm);transition:all .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:16px">📱</div>
+          <div style="font-size:9px;color:var(--text);margin-top:4px">Feed</div>
+        </a>
+        <a href="lensly-x-learning.html" style="text-decoration:none;text-align:center;padding:10px 4px;border:1px solid var(--border);border-radius:var(--r-sm);transition:all .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:16px">🎓</div>
+          <div style="font-size:9px;color:var(--text);margin-top:4px">Learning</div>
+        </a>
+        <a href="lensly-x-profile.html" style="text-decoration:none;text-align:center;padding:10px 4px;border:1px solid var(--border);border-radius:var(--r-sm);transition:all .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:16px">👤</div>
+          <div style="font-size:9px;color:var(--text);margin-top:4px">Profile</div>
+        </a>
+        <a href="lensly-x-shop.html" style="text-decoration:none;text-align:center;padding:10px 4px;border:1px solid var(--border);border-radius:var(--r-sm);transition:all .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:16px">🛍</div>
+          <div style="font-size:9px;color:var(--text);margin-top:4px">Shop</div>
+        </a>
+      </div>
+
+      <div style="font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin:14px 0 8px">Inside Profile</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a href="lensly-x-inbox.html" style="font-size:9px;color:var(--muted);letter-spacing:1px;text-decoration:none;text-transform:uppercase;border:1px solid var(--border);border-radius:99px;padding:5px 11px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">📥 Inbox</a>
+        <a href="lensly-x-calendar.html" style="font-size:9px;color:var(--muted);letter-spacing:1px;text-decoration:none;text-transform:uppercase;border:1px solid var(--border);border-radius:99px;padding:5px 11px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">📆 Calendar</a>
+        <a href="lensly-x-earnings.html" style="font-size:9px;color:var(--muted);letter-spacing:1px;text-decoration:none;text-transform:uppercase;border:1px solid var(--border);border-radius:99px;padding:5px 11px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">💰 Earnings</a>
+        <a href="lensly-x-booking-detail.html" style="font-size:9px;color:var(--muted);letter-spacing:1px;text-decoration:none;text-transform:uppercase;border:1px solid var(--border);border-radius:99px;padding:5px 11px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">📋 Booking Detail</a>
+      </div>
+    </div>
+  </div>
+
+  <p class="fade-up-6" style="color:var(--muted);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;margin-top:48px;text-align:center">
+    Pure HTML · CSS · JS &nbsp;·&nbsp; IIS Compatible &nbsp;·&nbsp; No Server-Side Code
+  </p>
+</div>
+</body>
+</html>
