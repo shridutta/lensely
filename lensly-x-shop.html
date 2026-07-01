@@ -33,11 +33,11 @@
 
 /* ── Deal banner ── */
 .deal-banner {
-  margin-top:16px; background:linear-gradient(135deg,#1a150a 0%,#241c0e 100%);
-  border:1px solid #3a2e1a; border-radius:var(--r-md); padding:16px;
+  margin-top:16px; background:linear-gradient(135deg,var(--tint-1) 0%,var(--tint-2) 100%);
+  border:1px solid var(--tint-line); border-radius:var(--r-md); padding:16px;
   display:flex; align-items:center; justify-content:space-between; position:relative; overflow:hidden;
 }
-.deal-banner::before { content:''; position:absolute; right:-20px; top:-20px; width:100px; height:100px; border:1px solid #3a2e1a; border-radius:50%; opacity:.5; }
+.deal-banner::before { content:''; position:absolute; right:-20px; top:-20px; width:100px; height:100px; border:1px solid var(--tint-line); border-radius:50%; opacity:.5; }
 .deal-text .dt-label { font-size:9px; color:var(--accent); letter-spacing:1.5px; text-transform:uppercase; }
 .deal-text .dt-title { font-family:var(--serif); font-size:18px; margin-top:4px; }
 .deal-text .dt-sub { font-size:10px; color:var(--muted); margin-top:3px; }
@@ -48,12 +48,12 @@
 .product-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); overflow:hidden; transition:border-color .2s; cursor:pointer; }
 .product-card:hover { border-color:var(--border-hi); }
 .product-thumb { aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:32px; opacity:.55; position:relative; }
-.pp1 { background:linear-gradient(135deg,#1e1810,#2a2215); }
-.pp2 { background:linear-gradient(135deg,#111a1e,#15242a); }
-.pp3 { background:linear-gradient(135deg,#1a1118,#251520); }
-.pp4 { background:linear-gradient(135deg,#111810,#162014); }
-.pp5 { background:linear-gradient(135deg,#1e1510,#2a1e12); }
-.pp6 { background:linear-gradient(135deg,#181010,#221414); }
+.pp1 { background:linear-gradient(135deg,var(--tint-1),var(--tint-2)); }
+.pp2 { background:linear-gradient(135deg,var(--info-bg),var(--info-bg2)); }
+.pp3 { background:linear-gradient(135deg,var(--plum-bg),var(--plum-bg2)); }
+.pp4 { background:linear-gradient(135deg,var(--ok-bg),var(--ok-bg)); }
+.pp5 { background:linear-gradient(135deg,var(--tint-1),var(--tint-2)); }
+.pp6 { background:linear-gradient(135deg,var(--warn-bg),var(--warn-bg)); }
 .discount-tag { position:absolute; top:6px; left:6px; font-size:7.5px; letter-spacing:.5px; background:var(--danger); color:white; padding:2px 6px; border-radius:3px; }
 .wishlist-icon { position:absolute; top:6px; right:6px; font-size:13px; cursor:pointer; opacity:.7; transition:opacity .2s; }
 .wishlist-icon:hover { opacity:1; }
@@ -267,5 +267,6 @@ function addToCart() {
   }, 1800);
 }
 </script>
+<script src="js/theme.js"></script>
 </body>
 </html>

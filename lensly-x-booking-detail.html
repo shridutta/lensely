@@ -17,8 +17,8 @@
   padding:11px 14px; border-radius:var(--r-sm);
   font-size:11px; display:flex; align-items:center; gap:8px;
 }
-.banner-new       { background:#1a150a; border:1px solid #3a2e18; color:var(--accent); }
-.banner-confirmed { background:#0f1a12; border:1px solid #1e4030; color:var(--success); }
+.banner-new       { background:var(--tint-1); border:1px solid var(--tint-line); color:var(--accent); }
+.banner-confirmed { background:var(--ok-bg); border:1px solid var(--ok-line); color:var(--success); }
 
 /* ── Client card ── */
 .client-card {
@@ -51,7 +51,7 @@
 /* ── Map placeholder ── */
 .map-frame {
   height:130px; border-radius:var(--r-sm); border:1px solid var(--border);
-  background:linear-gradient(135deg,#161616,#1a1a1a);
+  background:linear-gradient(135deg,var(--surface),var(--surface2));
   display:flex; align-items:center; justify-content:center;
   flex-direction:column; gap:4px; color:var(--muted); font-size:10px;
 }
@@ -67,7 +67,7 @@
 
 /* ── Note box ── */
 .note-box {
-  background:#1a150a; border:1px solid #3a2e18; border-radius:var(--r-sm);
+  background:var(--tint-1); border:1px solid var(--tint-line); border-radius:var(--r-sm);
   padding:11px 13px; font-size:11px; color:var(--text); line-height:1.7; font-style:italic; font-family:var(--serif);
 }
 
@@ -228,5 +228,6 @@ function declineBooking() {
   setTimeout(() => { window.location.href = 'lensly-x-inbox.html'; }, 900);
 }
 </script>
+<script src="js/theme.js"></script>
 </body>
 </html>

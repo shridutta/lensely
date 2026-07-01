@@ -39,18 +39,18 @@
 .cal-day.available { background:var(--surface); border-color:var(--border); color:var(--text); }
 .cal-day.available:hover { border-color:var(--accent); }
 .cal-day.blocked { background:var(--bg); border-color:var(--border); color:var(--muted); opacity:.4; }
-.cal-day.booked-half { background:#2a1e08; border-color:#3a2e18; color:var(--accent); font-weight:500; }
+.cal-day.booked-half { background:var(--tint-2); border-color:var(--tint-line); color:var(--accent); font-weight:500; }
 .cal-day.booked-full { background:var(--accent); border-color:var(--accent); color:#0d0d0d; font-weight:600; }
 .cal-day.today { box-shadow:0 0 0 1.5px var(--accent) inset; }
 .cal-day .dot { width:4px; height:4px; border-radius:50%; background:var(--accent); margin-top:2px; }
-.cal-day.booked-full .dot { background:#0d0d0d; }
+.cal-day.booked-full .dot { background:var(--text); }
 
 /* ── Legend ── */
 .legend { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; font-size:8.5px; color:var(--muted); }
 .legend-item { display:flex; align-items:center; gap:4px; }
 .legend-dot { width:10px; height:10px; border-radius:3px; border:1.5px solid; }
 .ld-avail  { background:var(--surface); border-color:var(--border); }
-.ld-half   { background:#2a1e08; border-color:#3a2e18; }
+.ld-half   { background:var(--tint-2); border-color:var(--tint-line); }
 .ld-full   { background:var(--accent); border-color:var(--accent); }
 .ld-block  { background:var(--bg); border-color:var(--border); opacity:.5; }
 
@@ -110,7 +110,7 @@
 .up-pkg-badge {
   font-size:8px; letter-spacing:.5px; padding:3px 7px; border-radius:99px; flex-shrink:0;
 }
-.up-badge-half { background:#2a1e08; color:var(--accent); border:1px solid #3a2e18; }
+.up-badge-half { background:var(--tint-2); color:var(--accent); border:1px solid var(--tint-line); }
 .up-badge-full { background:var(--accent); color:#0d0d0d; }
 
 </style>
@@ -347,5 +347,6 @@ function toggleAvailability() {
 
 renderCalendar();
 </script>
+<script src="js/theme.js"></script>
 </body>
 </html>

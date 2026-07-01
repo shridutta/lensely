@@ -12,10 +12,10 @@
   .search-bar .icon { font-size:16px; color:var(--muted); }
   .search-bar .placeholder { font-size:13px; color:var(--muted); flex:1; }
   .search-bar .filter-btn { width:30px; height:30px; border:1px solid var(--border-hi); border-radius:var(--r-sm); display:flex; align-items:center; justify-content:center; font-size:13px; }
-  .featured-banner { margin-top:20px; background:linear-gradient(135deg,#1a150a 0%,#241c0e 100%); border:1px solid #3a2e1a; border-radius:var(--r-md); padding:20px; position:relative; overflow:hidden; }
-  .featured-banner::before { content:''; position:absolute; right:-20px; top:-20px; width:120px; height:120px; border:1px solid #3a2e1a; border-radius:50%; opacity:.5; }
+  .featured-banner { margin-top:20px; background:linear-gradient(135deg,var(--tint-1) 0%,var(--tint-2) 100%); border:1px solid var(--tint-line); border-radius:var(--r-md); padding:20px; position:relative; overflow:hidden; }
+  .featured-banner::before { content:''; position:absolute; right:-20px; top:-20px; width:120px; height:120px; border:1px solid var(--tint-line); border-radius:50%; opacity:.5; }
   .photo-card { display:flex; gap:14px; align-items:center; padding:14px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); cursor:pointer; text-decoration:none; color:var(--text); transition:all .2s; }
-  .photo-card:hover { border-color:var(--accent); background:#191510; }
+  .photo-card:hover { border-color:var(--accent); background:var(--tint-1); }
   .photo-card+.photo-card { margin-top:8px; }
   .avatar { width:52px; height:52px; border-radius:50%; border:1px solid var(--border-hi); display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; background:var(--surface2); position:relative; }
   .avatar .online-dot { position:absolute; bottom:2px; right:2px; width:10px; height:10px; background:var(--success); border-radius:50%; border:2px solid var(--bg); }
@@ -42,7 +42,7 @@
     </div>
     <!-- Selected service type (from 00-services.html) -->
     <div id="svcFilterBar" class="mt-12 fade-up-2" style="display:none">
-      <div style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a150a,var(--surface));border:1px solid var(--accent);border-radius:var(--r-sm);padding:9px 13px">
+      <div style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--tint-1),var(--surface));border:1px solid var(--accent);border-radius:var(--r-sm);padding:9px 13px">
         <span id="svcFilterIcon" style="font-size:16px">📷</span>
         <span style="font-size:11px;color:var(--text);flex:1">Looking for <strong id="svcFilterName" style="color:var(--accent)">Photographer</strong></span>
         <a href="00-services.html" style="font-size:9px;color:var(--accent);letter-spacing:1px;text-decoration:none;text-transform:uppercase">Change</a>
@@ -158,4 +158,5 @@
   } catch(e) {}
 })();
 </script>
+<script src="js/theme.js"></script>
 </body></html>

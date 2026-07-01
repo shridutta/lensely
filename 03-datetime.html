@@ -28,8 +28,8 @@
   border:1.5px solid var(--border); color:var(--muted);
   background:var(--surface); transition:all .2s;
 }
-.step-bubble.active { border-color:var(--accent); color:var(--accent); background:#1a150a; }
-.step-bubble.done   { border-color:var(--success); color:var(--success); background:#0f2a18; }
+.step-bubble.active { border-color:var(--accent); color:var(--accent); background:var(--tint-1); }
+.step-bubble.done   { border-color:var(--success); color:var(--success); background:var(--ok-bg2); }
 .step-line { flex:1; height:1px; background:var(--border); }
 .step-line.done { background:var(--success); }
 .steps-label {
@@ -40,9 +40,9 @@
 
 /* ── Hint box ── */
 .hint-box {
-  background:#111820; border:1px solid #1e2e3a;
+  background:var(--info-bg); border:1px solid var(--info-line);
   border-radius:var(--r-sm); padding:10px 12px;
-  font-size:11px; color:#6a9ab0; display:flex; gap:8px;
+  font-size:11px; color:var(--info-text); display:flex; gap:8px;
   align-items:flex-start; line-height:1.6;
 }
 
@@ -74,7 +74,7 @@
   color:var(--text); background:var(--surface);
   border-color:var(--border);
 }
-.cal-day.available:hover { border-color:var(--accent); background:#191510; }
+.cal-day.available:hover { border-color:var(--accent); background:var(--tint-1); }
 .cal-day.booked {
   color:var(--muted); background:var(--bg);
   border-color:var(--border); opacity:.35; cursor:not-allowed;
@@ -83,7 +83,7 @@
 
 /* Selected states */
 .cal-day.sel-half {
-  background:linear-gradient(135deg,#2a1e08,#1a1208);
+  background:linear-gradient(135deg,var(--tint-2),var(--tint-1));
   border-color:var(--accent); color:var(--accent);
 }
 .cal-day.sel-full {
@@ -105,7 +105,7 @@
 .legend-item { display:flex; align-items:center; gap:5px; }
 .legend-dot { width:10px; height:10px; border-radius:3px; border:1.5px solid; }
 .ld-avail  { background:var(--surface); border-color:var(--border); }
-.ld-half   { background:#2a1e08; border-color:var(--accent); }
+.ld-half   { background:var(--tint-2); border-color:var(--accent); }
 .ld-full   { background:var(--accent); border-color:var(--accent); }
 .ld-booked { background:var(--bg); border-color:var(--border); opacity:.4; }
 
@@ -126,7 +126,7 @@
   padding:12px 10px; cursor:pointer; transition:all .2s; text-align:center;
 }
 .type-btn:hover { border-color:var(--border-hi); }
-.type-btn.half-active { border-color:var(--accent); background:#1a150a; }
+.type-btn.half-active { border-color:var(--accent); background:var(--tint-1); }
 .type-btn.full-active { border-color:var(--accent); background:var(--accent); }
 .type-btn-icon { font-size:20px; margin-bottom:4px; }
 .type-btn-name { font-size:11px; font-weight:500; }
@@ -157,7 +157,7 @@
   font-size:10px; letter-spacing:.5px; padding:3px 9px;
   border-radius:99px; flex-shrink:0;
 }
-.pkg-badge-half { background:#2a1e08; color:var(--accent); border:1px solid #3a2e18; }
+.pkg-badge-half { background:var(--tint-2); color:var(--accent); border:1px solid var(--tint-line); }
 .pkg-badge-full { background:var(--accent); color:#0d0d0d; }
 .booking-item-price { font-family:var(--serif); font-size:14px; color:var(--accent); flex-shrink:0; min-width:56px; text-align:right; }
 .booking-item-del {
@@ -171,8 +171,8 @@
 
 /* ── Cost summary card ── */
 .cost-summary {
-  background:linear-gradient(135deg,#1a150a,#201808);
-  border:1px solid #3a2e18; border-radius:var(--r-md); padding:14px;
+  background:linear-gradient(135deg,var(--tint-1),var(--tint-1));
+  border:1px solid var(--tint-line); border-radius:var(--r-md); padding:14px;
   margin-top:10px;
 }
 .cost-row-s {
@@ -182,7 +182,7 @@
 .cost-row-s .cv { color:var(--text); font-family:var(--mono); }
 .cost-total-row {
   display:flex; justify-content:space-between;
-  border-top:1px solid #3a2e18; margin-top:6px; padding-top:10px;
+  border-top:1px solid var(--tint-line); margin-top:6px; padding-top:10px;
 }
 .cost-total-row .ct-label { font-size:13px; color:var(--text); }
 .cost-total-row .ct-val { font-family:var(--serif); font-size:22px; color:var(--accent); }
@@ -657,5 +657,6 @@ restoreSelections();
 renderCalendar();
 renderSummary();
 </script>
+<script src="js/theme.js"></script>
 </body>
 </html>

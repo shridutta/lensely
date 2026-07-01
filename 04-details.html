@@ -28,7 +28,7 @@
 .section-card-title { font-family:var(--serif); font-size:15px; }
 .section-card-badge {
   margin-left:auto; font-size:9px; letter-spacing:1px;
-  background:#2a1208; color:var(--accent); border:1px solid #3a2218;
+  background:var(--badge-bg); color:var(--accent); border:1px solid var(--tint-line);
   border-radius:3px; padding:2px 7px; text-transform:uppercase;
 }
 .section-card-body { padding:14px; }
@@ -64,12 +64,12 @@
   cursor:pointer; transition:border-color .2s;
 }
 .form-select:focus { border-color:var(--accent); }
-.form-select option { background:#1f1f1f; }
+.form-select option { background:var(--surface2); }
 
 /* ── City confirmation pill ── */
 .city-confirm {
   display:none; margin-top:8px;
-  background:#0f2a18; border:1px solid #1e4030;
+  background:var(--ok-bg2); border:1px solid var(--ok-line);
   border-radius:var(--r-sm); padding:8px 12px;
   font-size:11px; color:var(--success);
   display:flex; align-items:center; gap:6px;
@@ -114,7 +114,7 @@
 
 /* ── Selected location card ── */
 .loc-confirmed {
-  background:#0f1a0f; border:1.5px solid var(--success);
+  background:var(--ok-bg); border:1.5px solid var(--success);
   border-radius:var(--r-sm); padding:10px 12px; margin-top:8px;
   display:none;
 }
@@ -131,16 +131,16 @@
 /* ── Assembly point section (outstation only) ── */
 .assembly-section {
   display:none; margin-top:10px;
-  background:#111820; border:1px solid #1e2e3a;
+  background:var(--info-bg); border:1px solid var(--info-line);
   border-radius:var(--r-sm); padding:12px;
 }
 .assembly-section.show { display:block; }
 .assembly-label {
-  font-size:10px; color:#6a9ab0; letter-spacing:1.5px;
+  font-size:10px; color:var(--info-text); letter-spacing:1.5px;
   text-transform:uppercase; margin-bottom:8px;
   display:flex; align-items:center; gap:6px;
 }
-.assembly-label::after { content:'REQUIRED'; font-size:8px; background:#1e2e3a; padding:2px 5px; border-radius:2px; }
+.assembly-label::after { content:'REQUIRED'; font-size:8px; background:var(--info-line); padding:2px 5px; border-radius:2px; }
 
 /* ── Shoot purpose ── */
 .purpose-grid {
@@ -152,7 +152,7 @@
   text-align:center; background:var(--surface);
 }
 .purpose-btn:hover { border-color:var(--border-hi); }
-.purpose-btn.active { border-color:var(--accent); background:#1a150a; }
+.purpose-btn.active { border-color:var(--accent); background:var(--tint-1); }
 .purpose-icon  { font-size:20px; display:block; margin-bottom:4px; }
 .purpose-name  { font-size:11px; font-weight:500; color:var(--text); }
 .purpose-btn.active .purpose-name { color:var(--accent); }
@@ -177,7 +177,7 @@
 /* Custom tag */
 .custom-tag {
   display:inline-flex; align-items:center; gap:5px;
-  border:1px solid var(--accent); background:#1a150a;
+  border:1px solid var(--accent); background:var(--tint-1);
   border-radius:99px; padding:4px 10px; font-size:10px;
   color:var(--accent); margin-top:6px; margin-right:4px;
 }
@@ -213,7 +213,7 @@
 
 /* ── Validation error ── */
 .field-error {
-  font-size:10px; color:#c05c3a; margin-top:5px;
+  font-size:10px; color:var(--danger); margin-top:5px;
   display:none; align-items:center; gap:4px;
 }
 .field-error.show { display:flex; }
@@ -379,7 +379,7 @@
         </div>
 
         <!-- Outstation notice -->
-        <div id="outstationNotice" style="display:none;margin-top:10px;background:#1a1008;border:1px solid #3a2e18;border-radius:var(--r-sm);padding:10px 12px;font-size:11px;color:var(--accent);line-height:1.6">
+        <div id="outstationNotice" style="display:none;margin-top:10px;background:var(--tint-1);border:1px solid var(--tint-line);border-radius:var(--r-sm);padding:10px 12px;font-size:11px;color:var(--accent);line-height:1.6">
           ✈️ <strong>Outstation booking:</strong> Travel, accommodation & meal costs are borne by the client. Please coordinate with your photographer.
         </div>
       </div>
@@ -783,7 +783,7 @@ function simulatePinMain(val) {
 
 function simulatePinAssembly(val) {
   document.getElementById('assemblyMapPlaceholder').innerHTML =
-    `<div style="font-size:14px;color:#6a9ab0;text-align:center;padding:16px">
+    `<div style="font-size:14px;color:var(--info-text);text-align:center;padding:16px">
       <div style="font-size:24px;margin-bottom:4px">🏁</div><strong>${val}</strong>
     </div>`;
   document.getElementById('assemblyName').textContent    = val;
@@ -969,5 +969,6 @@ window.addEventListener('load', () => {
   }
 });
 </script>
+<script src="js/theme.js"></script>
 </body>
 </html>

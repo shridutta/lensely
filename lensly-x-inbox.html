@@ -79,7 +79,7 @@
   transition:all .25s;
 }
 .req-card + .req-card { margin-top:10px; }
-.req-card.is-new { border-color:#3a2e18; }
+.req-card.is-new { border-color:var(--tint-line); }
 .req-card.removing { opacity:0; transform:translateX(30px); }
 
 .req-top {
@@ -99,10 +99,10 @@
   font-size:8px; letter-spacing:1px; text-transform:uppercase;
   padding:3px 8px; border-radius:99px; flex-shrink:0; white-space:nowrap;
 }
-.pill-new       { background:#2a1e08; color:var(--accent); border:1px solid #3a2e18; }
-.pill-confirmed { background:#0f2a18; color:var(--success); border:1px solid #1e4030; }
+.pill-new       { background:var(--tint-2); color:var(--accent); border:1px solid var(--tint-line); }
+.pill-confirmed { background:var(--ok-bg2); color:var(--success); border:1px solid var(--ok-line); }
 .pill-completed { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
-.pill-declined  { background:#1e1010; color:#8a4a3a; border:1px solid #3a2020; }
+.pill-declined  { background:var(--warn-bg); color:var(--warn-text); border:1px solid var(--warn-line); }
 
 /* ── Body details ── */
 .req-body { padding:0 14px 12px; display:flex; flex-direction:column; gap:7px; }
@@ -526,5 +526,6 @@ function updateCounts() {
 updateCounts();
 applyFilter();
 </script>
+<script src="js/theme.js"></script>
 </body>
 </html>

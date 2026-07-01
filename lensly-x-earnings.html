@@ -17,13 +17,13 @@
 
 /* ── Big balance card ── */
 .balance-card {
-  background:linear-gradient(135deg,#1a150a 0%,#241c0e 100%);
-  border:1px solid #3a2e1a; border-radius:var(--r-lg);
+  background:linear-gradient(135deg,var(--tint-1) 0%,var(--tint-2) 100%);
+  border:1px solid var(--tint-line); border-radius:var(--r-lg);
   padding:22px; position:relative; overflow:hidden;
 }
 .balance-card::before {
   content:''; position:absolute; right:-30px; top:-30px;
-  width:140px; height:140px; border:1px solid #3a2e1a; border-radius:50%; opacity:.4;
+  width:140px; height:140px; border:1px solid var(--tint-line); border-radius:50%; opacity:.4;
 }
 .balance-label { font-size:9px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; }
 .balance-amount { font-family:var(--serif); font-size:38px; color:var(--accent); margin-top:4px; }
@@ -250,5 +250,6 @@ function switchTab(el) {
   });
 }
 </script>
+<script src="js/theme.js"></script>
 </body>
 </html>

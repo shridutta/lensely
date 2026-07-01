@@ -22,6 +22,68 @@
   --r-md:  12px;
   --r-lg:  20px;
   --r-xl:  32px;
+
+  /* Semantic surface / status tints (page-level UI) */
+  --tint-1:    #1a150a;   /* selected / active warm wash        */
+  --tint-2:    #241c0e;   /* slightly lighter warm wash / hover */
+  --tint-line: #3a2e18;   /* amber hairline border              */
+  --badge-bg:  #2a1208;   /* dark amber badge background        */
+
+  --info-bg:   #111820;   /* blue info box                      */
+  --info-bg2:  #15242a;
+  --info-line: #1e2e3a;
+  --info-text: #6a9ab0;
+  --info-hi:   #1a3a6b;   /* saturated blue highlight banner    */
+  --info-hi2:  #2352a0;
+
+  --ok-bg:     #162014;   /* green success box                  */
+  --ok-bg2:    #0f2a18;
+  --ok-line:   #1e4030;
+
+  --warn-bg:   #221414;   /* red / danger box                   */
+  --warn-line: #3a2020;
+  --warn-text: #c9845a;
+
+  --plum-bg:   #1a1118;   /* purple accent box                  */
+  --plum-bg2:  #251520;
+}
+
+/* ── Light theme (flips the palette) ── */
+:root[data-theme="light"] {
+  --bg:        #f4f1ea;
+  --surface:   #ffffff;
+  --surface2:  #ece7dd;
+  --border:    #ded6c8;
+  --border-hi: #c2b8a5;
+  --text:      #2b2721;
+  --muted:     #8a8074;
+  --accent:    #a67c3d;
+  --accent2:   #8a6630;
+  --danger:    #b64f2d;
+  --success:   #3f7d54;
+
+  --tint-1:    #f4eee1;
+  --tint-2:    #ece2d0;
+  --tint-line: #e3d6ba;
+  --badge-bg:  #f3e3d0;
+
+  --info-bg:   #e9f1f7;
+  --info-bg2:  #dcecf4;
+  --info-line: #cadfec;
+  --info-text: #37677f;
+  --info-hi:   #cfe4f7;
+  --info-hi2:  #b3d4f2;
+
+  --ok-bg:     #e7f2e9;
+  --ok-bg2:    #d9efdf;
+  --ok-line:   #c2e0cc;
+
+  --warn-bg:   #f8e8e3;
+  --warn-line: #ecccc0;
+  --warn-text: #b0502a;
+
+  --plum-bg:   #f1e8f0;
+  --plum-bg2:  #e7d6e6;
 }
 
 html { font-size: 16px; }
@@ -33,7 +95,27 @@ body {
   min-height: 100vh;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+/* ── Global light/dark toggle ── */
+.theme-toggle {
+  position: fixed;
+  top: 16px; right: 16px;
+  z-index: 999;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border-hi);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 12px rgba(0,0,0,.25);
+  transition: transform 0.2s, border-color 0.2s, background 0.2s;
+}
+.theme-toggle:hover { border-color: var(--accent); transform: scale(1.08); }
 
 .shell {
   min-height: 100vh;
@@ -42,7 +124,7 @@ body {
   align-items: center;
   justify-content: flex-start;
   padding: 0;
-  background: radial-gradient(ellipse at 60% 0%, #1a1510 0%, var(--bg) 70%);
+  background: radial-gradient(ellipse at 60% 0%, var(--tint-1) 0%, var(--bg) 70%);
 }
 
 .phone {
@@ -85,7 +167,7 @@ body {
   text-decoration: none;
   transition: border-color 0.2s, background 0.2s;
 }
-.back-btn:hover { border-color: var(--accent); background: #1e1a13; }
+.back-btn:hover { border-color: var(--accent); background: var(--tint-1); }
 .nav-title { font-family: var(--serif); font-size: 18px; font-weight: 400; letter-spacing: 0.3px; }
 .nav-action { font-size: 11px; color: var(--accent); letter-spacing: 1px; cursor: pointer; text-decoration: none; }
 
@@ -164,7 +246,7 @@ body {
   transition: border-color 0.2s;
 }
 .card:hover { border-color: var(--border-hi); }
-.card.selected { border-color: var(--accent); background: #1a160e; }
+.card.selected { border-color: var(--accent); background: var(--tint-1); }
 
 .input-group { display: flex; flex-direction: column; gap: 6px; }
 .input-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
@@ -204,7 +286,7 @@ body {
   white-space: nowrap;
 }
 .chip:hover { border-color: var(--border-hi); color: var(--text); }
-.chip.active { border-color: var(--accent); color: var(--accent); background: #1a150a; }
+.chip.active { border-color: var(--accent); color: var(--accent); background: var(--tint-1); }
 
 .stars { color: var(--accent); letter-spacing: 2px; font-size: 13px; }
 

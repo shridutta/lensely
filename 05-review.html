@@ -15,7 +15,7 @@
 /* ── Photographer header ── */
 .phot-header {
   display:flex; align-items:center; gap:12px;
-  background:linear-gradient(135deg,#1a150a,var(--surface));
+  background:linear-gradient(135deg,var(--tint-1),var(--surface));
   border:1px solid var(--border); border-radius:var(--r-md);
   padding:14px;
 }
@@ -46,7 +46,7 @@
   font-size:9px; letter-spacing:.5px; padding:3px 8px;
   border-radius:99px; flex-shrink:0;
 }
-.pkg-half { background:#2a1e08; color:var(--accent); border:1px solid #3a2e18; }
+.pkg-half { background:var(--tint-2); color:var(--accent); border:1px solid var(--tint-line); }
 .pkg-full { background:var(--accent); color:#0d0d0d; }
 .day-pill-price { font-family:var(--serif); font-size:13px; color:var(--accent); }
 
@@ -72,10 +72,10 @@
   font-size:11px; line-height:1.7;
 }
 .cancel-free {
-  background:#0f1a12; border:1px solid #1e4030; color:var(--success);
+  background:var(--ok-bg); border:1px solid var(--ok-line); color:var(--success);
 }
 .cancel-fee {
-  background:#1a0f08; border:1px solid #3a2010; color:#c9845a;
+  background:var(--tint-1); border:1px solid var(--tint-line); color:var(--warn-text);
 }
 .cancel-title { font-weight:500; margin-bottom:4px; font-size:12px; }
 .cancel-date  { color:var(--accent); font-weight:500; }
@@ -89,7 +89,7 @@
 .cpi-label { color:var(--muted); font-size:9px; letter-spacing:.5px; margin-bottom:3px; }
 .cpi-val   { font-weight:500; }
 .cpi-val.free { color:var(--success); }
-.cpi-val.fee  { color:#c9845a; }
+.cpi-val.fee  { color:var(--warn-text); }
 
 /* ── Payment method ── */
 .payment-row {
@@ -101,7 +101,7 @@
 .payment-row:hover { border-color:var(--border-hi); }
 .card-icon {
   width:38px; height:25px;
-  background:linear-gradient(135deg,#1a3a6b,#2352a0);
+  background:linear-gradient(135deg,var(--info-hi),var(--info-hi2));
   border-radius:4px; display:flex; align-items:center;
   justify-content:center; font-size:10px; color:white; letter-spacing:.5px;
 }
@@ -546,7 +546,7 @@ function renderCancellation(sortedKeys, selections, grandTotal) {
       <div class="cancel-title">✅ Free Cancellation Available</div>
       <div>Cancel before <span class="cancel-date">${ddLabel}</span> (midnight) for a full refund.</div>
       <div style="margin-top:6px;font-size:10px;color:var(--muted)">
-        After this date, a cancellation fee of <strong style="color:#c9845a">${fmt(penaltyAmt)}</strong> (25%) will be charged.
+        After this date, a cancellation fee of <strong style="color:var(--warn-text)">${fmt(penaltyAmt)}</strong> (25%) will be charged.
       </div>
     `;
   } else {
@@ -589,5 +589,6 @@ function saveDemoData() {
 saveDemoData();
 render();
 </script>
+<script src="js/theme.js"></script>
 </body>
 </html>

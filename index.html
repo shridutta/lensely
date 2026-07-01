@@ -13,7 +13,7 @@
     align-items: center;
     justify-content: flex-start;
     padding: 60px 24px 80px;
-    background: radial-gradient(ellipse at 50% -10%, #1e1710 0%, var(--bg) 60%);
+    background: radial-gradient(ellipse at 50% -10%, var(--tint-1) 0%, var(--bg) 60%);
   }
   .hub-logo { font-family: var(--serif); font-size: 48px; font-weight: 300; letter-spacing: 4px; }
   .hub-logo span { color: var(--accent); }
@@ -42,7 +42,7 @@
   }
   .flow-card:hover {
     border-color: var(--accent);
-    background: #191510;
+    background: var(--tint-1);
     transform: translateY(-2px);
   }
   .step-badge {
@@ -89,7 +89,7 @@
   /* ── Sub-project card (Lensly X) ── */
   .subproject-card {
     width: 100%; max-width: 900px;
-    background: linear-gradient(135deg, #161310 0%, #0d0d0d 100%);
+    background: linear-gradient(135deg, var(--tint-1) 0%, var(--bg) 100%);
     border: 1px solid var(--border-hi);
     border-radius: var(--r-lg);
     padding: 28px;
@@ -131,6 +131,74 @@
     transition: background .2s;
   }
   .subproject-cta:hover { background: var(--accent2); }
+
+  /* ── Service type horizontal scroller ── */
+  .svc-scroll-wrap { width: 100%; max-width: 900px; margin-top: 20px; }
+  .svc-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 6px 2px 14px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-hi) transparent;
+  }
+  .svc-scroll::-webkit-scrollbar { height: 6px; }
+  .svc-scroll::-webkit-scrollbar-track { background: transparent; }
+  .svc-scroll::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 99px; }
+
+  .svc-chip {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    width: 128px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 18px 14px 16px;
+    text-decoration: none;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .svc-chip:hover {
+    border-color: var(--accent);
+    background: var(--tint-1);
+    transform: translateY(-3px);
+  }
+  .svc-chip-icon {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    transition: all 0.2s;
+  }
+  .svc-chip:hover .svc-chip-icon {
+    background: linear-gradient(135deg, var(--tint-2), var(--tint-1));
+    border-color: var(--accent);
+  }
+  .svc-chip-name {
+    font-family: var(--serif);
+    font-size: 13px;
+    line-height: 1.25;
+  }
+  .svc-chip-badge {
+    position: absolute; top: -7px; right: 10px;
+    font-size: 7px; letter-spacing: 1px; text-transform: uppercase;
+    background: var(--badge-bg); color: var(--accent); border: 1px solid var(--tint-line);
+    border-radius: 3px; padding: 2px 6px;
+  }
+  .svc-scroll-hint {
+    font-size: 10px; color: var(--muted); letter-spacing: 1px;
+    margin: 4px 0 0 2px;
+  }
 </style>
 </head>
 <body>
@@ -140,17 +208,42 @@
     <div class="hub-tagline">Photographer Booking — UI Prototype</div>
   </div>
 
-  <div class="section-sep fade-up-2">Get Started</div>
+  <div class="section-sep fade-up-2">Get Started — Select Service Type</div>
 
-  <div class="flow-grid fade-up-3">
-    <a class="flow-card" href="00-services.html">
-      <div class="step-badge">00</div>
-      <div class="flow-card-info">
-        <div class="flow-card-title">Select Service Type</div>
-        <div class="flow-card-desc">Photographer, cinematographer, drone pilot, candid, traditional & more — pick the one you need.</div>
-      </div>
-      <div class="flow-card-arrow">→</div>
-    </a>
+  <div class="svc-scroll-wrap fade-up-3">
+    <div class="svc-scroll">
+      <a class="svc-chip" href="01-home.html" data-svc="photographer" data-name="Photographer" data-icon="📷" onclick="pickSvc(this)">
+        <span class="svc-chip-badge">Popular</span>
+        <div class="svc-chip-icon">📷</div>
+        <div class="svc-chip-name">Photographer</div>
+      </a>
+      <a class="svc-chip" href="01-home.html" data-svc="cinematographer" data-name="Cinematographer" data-icon="🎬" onclick="pickSvc(this)">
+        <div class="svc-chip-icon">🎬</div>
+        <div class="svc-chip-name">Cinematographer</div>
+      </a>
+      <a class="svc-chip" href="01-home.html" data-svc="candid" data-name="Candid Photographer" data-icon="🤳" onclick="pickSvc(this)">
+        <span class="svc-chip-badge">Popular</span>
+        <div class="svc-chip-icon">🤳</div>
+        <div class="svc-chip-name">Candid Photographer</div>
+      </a>
+      <a class="svc-chip" href="01-home.html" data-svc="traditional-photo" data-name="Traditional Photographer" data-icon="🖼" onclick="pickSvc(this)">
+        <div class="svc-chip-icon">🖼</div>
+        <div class="svc-chip-name">Traditional Photographer</div>
+      </a>
+      <a class="svc-chip" href="01-home.html" data-svc="traditional-video" data-name="Traditional Videographer" data-icon="📼" onclick="pickSvc(this)">
+        <div class="svc-chip-icon">📼</div>
+        <div class="svc-chip-name">Traditional Videographer</div>
+      </a>
+      <a class="svc-chip" href="01-home.html" data-svc="drone" data-name="Drone Pilot" data-icon="🚁" onclick="pickSvc(this)">
+        <div class="svc-chip-icon">🚁</div>
+        <div class="svc-chip-name">Drone Pilot</div>
+      </a>
+      <a class="svc-chip" href="01-home.html" data-svc="assistant" data-name="Assistant" data-icon="🧰" onclick="pickSvc(this)">
+        <div class="svc-chip-icon">🧰</div>
+        <div class="svc-chip-name">Assistant</div>
+      </a>
+    </div>
+    <div class="svc-scroll-hint">← Swipe to see all services →</div>
   </div>
 
   <div class="section-sep fade-up-3">Discovery</div>
@@ -260,5 +353,19 @@
     Pure HTML · CSS · JS &nbsp;·&nbsp; IIS Compatible &nbsp;·&nbsp; No Server-Side Code
   </p>
 </div>
+
+<script>
+  /* Store the chosen service, then let the link navigate to 01-home.html */
+  function pickSvc(el) {
+    try {
+      sessionStorage.setItem('lensly_service_type', JSON.stringify({
+        svc  : el.dataset.svc,
+        name : el.dataset.name,
+        icon : el.dataset.icon
+      }));
+    } catch (e) {}
+  }
+</script>
+<script src="js/theme.js"></script>
 </body>
 </html>
