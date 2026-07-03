@@ -505,6 +505,28 @@ function render() {
   // Save total for confirm page
   try { sessionStorage.setItem('lensly_total', grandTotal); } catch(e) {}
 
+  /* ─ Stash a booking summary for the API call (see book handler below) ─ */
+  const firstKey  = sortedKeys[0];
+  const firstSel  = selections[firstKey] || {};
+  const pkgLabel  = (halfCount && fullCount) ? `Mixed (${sortedKeys.length} days)`
+                   : fullCount ? (fullCount > 1 ? `Full Day × ${fullCount}` : 'Full Day')
+                   : (halfCount > 1 ? `Half Day × ${halfCount}` : 'Half Day');
+  window.__booking = {
+    photographer_id: phot.id || '',
+    photographer:    phot.name || '',
+    service_type:    phot.service_type || phot.serviceType || 'Photographer',
+    package:         pkgLabel,
+    shoot_date:      firstKey || '',
+    start_time:      firstSel.startTime || '',
+    location:        details.location || '',
+    city:            details.city || '',
+    state:           details.state || '',
+    work_type:       details.workType === 'outstation' ? 'Outstation' : 'Local',
+    purpose:         (details.purposes || []).join(', '),
+    amount:          baseTotal,
+    notes:           details.notes || ''
+  };
+
   /* ─ Cancellation policy ─ */
   renderCancellation(sortedKeys, selections, grandTotal);
 }
@@ -588,7 +610,44 @@ function saveDemoData() {
 // Run on load
 saveDemoData();
 render();
+
+/* ══════════════════════════════════════════════
+   BOOK A SLOT  →  POST /api/bookings  (Backend/server.js)
+   Falls back to the demo confirm page when the
+   backend is offline (parked) so the flow still works.
+══════════════════════════════════════════════ */
+document.getElementById('bookBtn').addEventListener('click', async function (e) {
+  e.preventDefault();
+  const btn = this;
+  const b   = window.__booking || {};
+
+  // Customer identity captured on 04-details (or a sensible default)
+  let cust = {};
+  try { cust = JSON.parse(sessionStorage.getItem('lensly_customer') || '{}'); } catch (err) {}
+
+  const payload = Object.assign({
+    client_name:  cust.name  || 'Guest User',
+    client_phone: cust.phone || ''
+  }, b);
+
+  const original = btn.textContent;
+  btn.style.pointerEvents = 'none';
+  btn.textContent = 'Booking…';
+
+  try {
+    const res = await LenslyAPI.createBooking(payload);
+    if (res.data && res.data.booking_ref) {
+      try { sessionStorage.setItem('lensly_booking_ref', res.data.booking_ref); } catch (err) {}
+    }
+    window.location.href = '06-confirm.html';
+  } catch (err) {
+    // Offline / parked backend → continue to demo confirmation
+    console.warn('Booking API unavailable:', err.message);
+    window.location.href = '06-confirm.html';
+  }
+});
 </script>
+<script src="js/api.js"></script>
 <script src="js/theme.js"></script>
 </body>
 </html>

@@ -402,6 +402,7 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<script src="js/api.js"></script>
 <script>
 /* ══════════════════════════════════════
    TOAST
@@ -416,20 +417,129 @@ function showToast(msg, type) {
 }
 
 /* ══════════════════════════════════════
+   BACKEND INTEGRATION  (Backend/server.js)
+   • Load this photographer's booking requests
+   • Accept / reject through the API
+   Falls back to the static demo cards when the
+   backend is offline (parked) or not signed in.
+══════════════════════════════════════ */
+let LIVE = false;   // true once cards are backed by the API
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, c =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+}
+function fmtMoney(n) {
+  n = Number(n) || 0;
+  return '₹' + n.toLocaleString('en-IN');
+}
+function fmtWhen(dateStr, timeStr) {
+  if (!dateStr) return timeStr || '';
+  const d = new Date(dateStr + (timeStr ? 'T' + timeStr : 'T00:00'));
+  if (isNaN(d)) return esc(dateStr + (timeStr ? ' · ' + timeStr : ''));
+  const opt = { weekday:'short', day:'numeric', month:'short' };
+  let out = d.toLocaleDateString('en-IN', opt);
+  if (timeStr) out += ' · ' + d.toLocaleTimeString('en-IN', { hour:'numeric', minute:'2-digit' });
+  return out;
+}
+
+// Map backend status → card status bucket + pill
+const STATUS_MAP = {
+  Pending:   { bucket:'new',       pill:'pill-new',       label:'New',       isNew:true  },
+  Accepted:  { bucket:'confirmed', pill:'pill-confirmed', label:'Confirmed', isNew:false },
+  Completed: { bucket:'all-only',  pill:'pill-completed', label:'Completed', isNew:false },
+  Rejected:  { bucket:'declined',  pill:'pill-declined',  label:'Declined',  isNew:false }
+};
+
+function cardHTML(b) {
+  const s = STATUS_MAP[b.status] || STATUS_MAP.Pending;
+  const pkgIcon = /full/i.test(b.package) ? '☀️' : '🌤';
+  const actions = (b.status === 'Pending')
+    ? `<div class="req-actions">
+         <button class="act-btn act-decline" onclick="declineReq('${esc(b.id)}', this)">Decline</button>
+         <button class="act-btn act-accept" onclick="acceptReq('${esc(b.id)}', this)">Accept Booking</button>
+       </div>`
+    : `<div class="req-actions secondary">
+         <button class="act-btn">💬 Message</button>
+         <button class="act-btn">📍 Directions</button>
+       </div>`;
+
+  return `
+    <div class="req-card ${s.isNew ? 'is-new' : ''}" data-status="${s.bucket}" data-id="${esc(b.id)}">
+      <div class="req-top">
+        <div class="req-avatar">📸</div>
+        <div class="req-info">
+          <div class="req-client">${esc(b.client_name || 'Client')}</div>
+          <div class="req-meta">${esc(b.booking_ref || b.id)}</div>
+        </div>
+        <span class="req-status-pill ${s.pill}">${s.label}</span>
+      </div>
+      <div class="req-body">
+        <div class="req-detail-row"><span class="ic">📅</span><span>${fmtWhen(b.shoot_date, b.start_time)}</span></div>
+        <div class="req-detail-row"><span class="ic">${pkgIcon}</span><span>${esc(b.package || '—')}</span><span class="req-price">${fmtMoney(b.amount)}</span></div>
+        <div class="req-detail-row"><span class="ic">📍</span><span class="muted">${esc(b.location || b.city || '—')}</span></div>
+        <div class="req-detail-row"><span class="ic">🎯</span><span class="muted">${esc(b.purpose || '—')}</span></div>
+      </div>
+      ${actions}
+    </div>`;
+}
+
+async function loadFromBackend() {
+  // Not signed in → send photographer to login (only when backend is reachable)
+  const online = await LenslyAPI.ping();
+  if (!online) {
+    showToast('Offline — showing sample requests', 'decline');
+    return;   // keep static demo cards
+  }
+  if (!LenslyAPI.isLoggedIn()) {
+    window.location.replace('lensly-x-login.html');
+    return;
+  }
+
+  const phot = LenslyAPI.currentPhotographer();
+  if (phot && phot.name) document.querySelector('.inbox-name').textContent = String(phot.name).toUpperCase();
+
+  try {
+    const res  = await LenslyAPI.listBookings(phot ? { photographer_id: phot.id } : {});
+    const rows = (res.data || []).filter(b => b.status !== 'Rejected');
+
+    const content = document.querySelector('.content');
+    // Remove static demo cards + day labels, keep stat strip / tabs / empty state
+    content.querySelectorAll('.req-card, .day-group-label').forEach(el => el.remove());
+
+    const anchor = document.getElementById('emptyState');
+    if (rows.length) {
+      const frag = document.createElement('div');
+      frag.innerHTML = rows.map(cardHTML).join('');
+      Array.prototype.slice.call(frag.children).forEach(c => content.insertBefore(c, anchor));
+    }
+    LIVE = true;
+    updateCounts();
+    applyFilter();
+  } catch (err) {
+    showToast(err.message || 'Could not load requests', 'decline');
+  }
+}
+
+/* ══════════════════════════════════════
    ACCEPT / DECLINE
 ══════════════════════════════════════ */
-function acceptReq(id, btn) {
+async function acceptReq(id, btn) {
   const card = document.querySelector(`.req-card[data-id="${id}"]`);
   if (!card) return;
 
-  // Update pill
+  if (LIVE) {
+    btn.disabled = true; btn.textContent = '…';
+    try { await LenslyAPI.acceptBooking(id); }
+    catch (err) { showToast(err.message || 'Could not accept', 'decline'); btn.disabled = false; btn.textContent = 'Accept Booking'; return; }
+  }
+
   const pill = card.querySelector('.req-status-pill');
   pill.textContent = 'Confirmed';
   pill.className = 'req-status-pill pill-confirmed';
   card.classList.remove('is-new');
   card.dataset.status = 'confirmed';
 
-  // Replace action row with secondary actions
   const actions = card.querySelector('.req-actions');
   actions.outerHTML = `
     <div class="req-actions secondary">
@@ -442,10 +552,16 @@ function acceptReq(id, btn) {
   applyFilter();
 }
 
-function declineReq(id, btn) {
+async function declineReq(id, btn) {
   if (!confirm('Decline this booking request? This cannot be undone.')) return;
   const card = document.querySelector(`.req-card[data-id="${id}"]`);
   if (!card) return;
+
+  if (LIVE) {
+    btn.disabled = true;
+    try { await LenslyAPI.rejectBooking(id); }
+    catch (err) { showToast(err.message || 'Could not decline', 'decline'); btn.disabled = false; return; }
+  }
 
   card.classList.add('removing');
   setTimeout(() => {
@@ -525,6 +641,7 @@ function updateCounts() {
 /* Init */
 updateCounts();
 applyFilter();
+loadFromBackend();   // replace demo cards with live data when backend is up
 </script>
 <script src="js/theme.js"></script>
 </body>

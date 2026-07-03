@@ -91,6 +91,45 @@
 }
 .logout-btn:hover { background:var(--warn-bg); }
 
+/* ── Avatar upload ── */
+.profile-avatar { position:relative; overflow:hidden; cursor:pointer; }
+.profile-avatar img { width:100%; height:100%; object-fit:cover; }
+.profile-avatar .avatar-cam {
+  position:absolute; bottom:0; left:0; right:0;
+  background:rgba(0,0,0,.55); color:#fff; font-size:9px; text-align:center;
+  padding:2px 0; letter-spacing:.5px;
+}
+
+/* ── Portfolio manager ── */
+.pf-head { display:flex; align-items:center; justify-content:space-between; }
+.pf-count { font-size:9px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; }
+.pf-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+.pf-tile {
+  aspect-ratio:1/1; border-radius:var(--r-sm); overflow:hidden; position:relative;
+  border:1px solid var(--border); background:var(--surface2);
+}
+.pf-tile img { width:100%; height:100%; object-fit:cover; display:block; }
+/* Dummy placeholder tiles (shown until real photos are uploaded) */
+.pf-tile.dummy {
+  display:flex; align-items:center; justify-content:center; font-size:20px; opacity:.55;
+  background:linear-gradient(135deg,var(--tint-1),var(--surface2));
+}
+.pf-tile .pf-del {
+  position:absolute; top:4px; right:4px; width:20px; height:20px; border-radius:50%;
+  background:rgba(0,0,0,.6); color:#fff; border:none; font-size:12px; line-height:1;
+  cursor:pointer; display:none; align-items:center; justify-content:center;
+}
+.pf-tile:hover .pf-del { display:flex; }
+.pf-add {
+  aspect-ratio:1/1; border-radius:var(--r-sm); cursor:pointer;
+  border:1.5px dashed var(--border-hi); background:transparent; color:var(--muted);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:4px; font-size:9px; letter-spacing:.5px; text-transform:uppercase; transition:all .2s;
+}
+.pf-add:hover { border-color:var(--accent); color:var(--accent); }
+.pf-add .plus { font-size:22px; line-height:1; }
+.pf-note { font-size:9.5px; color:var(--muted); margin-top:8px; line-height:1.6; }
+
 </style>
 </head>
 <body>
@@ -107,11 +146,15 @@
 
   <!-- Profile hero -->
   <div class="profile-hero fade-up-2">
-    <div class="profile-avatar">📷</div>
+    <div class="profile-avatar" id="avatarBox" onclick="document.getElementById('avatarInput').click()" title="Change photo">
+      <span id="avatarEmoji">📷</span>
+      <span class="avatar-cam">✎ Photo</span>
+    </div>
+    <input type="file" id="avatarInput" accept="image/*" hidden>
     <div>
-      <div class="profile-name">Sofia Reyes</div>
-      <div class="profile-spec">Portrait · Editorial · Wedding</div>
-      <div class="profile-rating"><span class="stars" style="font-size:12px">★★★★★</span> <span style="color:var(--muted);font-size:10px">4.9 (128 reviews)</span></div>
+      <div class="profile-name" id="pfName">Sofia Reyes</div>
+      <div class="profile-spec" id="pfSpec">Portrait · Editorial · Wedding</div>
+      <div class="profile-rating"><span class="stars" style="font-size:12px">★★★★★</span> <span style="color:var(--muted);font-size:10px" id="pfRating">4.9 (128 reviews)</span></div>
     </div>
   </div>
 
@@ -141,6 +184,26 @@
         <div class="quick-tile-sub">Settings &amp; preferences</div>
       </a>
     </div>
+
+    <!-- Portfolio manager -->
+    <div class="pf-head fade-up-4" style="margin-top:20px">
+      <p class="section-label" style="margin:0">My Portfolio</p>
+      <span class="pf-count" id="pfCount">Sample photos</span>
+    </div>
+    <div class="pf-grid fade-up-4" id="pfGrid">
+      <!-- Dummy tiles shown until real photos are uploaded -->
+      <div class="pf-tile dummy">🌇</div>
+      <div class="pf-tile dummy">💍</div>
+      <div class="pf-tile dummy">👰</div>
+      <div class="pf-tile dummy">🎂</div>
+      <div class="pf-tile dummy">🌸</div>
+      <button class="pf-add" onclick="document.getElementById('portfolioInput').click()">
+        <span class="plus">+</span>
+        Add Photos
+      </button>
+    </div>
+    <input type="file" id="portfolioInput" accept="image/*" multiple hidden>
+    <p class="pf-note fade-up-4">Showing sample images. Upload your own shots — they replace these placeholders and appear on your public profile.</p>
 
     <!-- Pricing & Packages -->
     <p class="section-label fade-up-4" id="accountSection">Pricing &amp; Packages</p>
@@ -302,7 +365,114 @@
 
 <div id="toast" style="position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--success);color:white;border-radius:var(--r-sm);padding:10px 18px;font-size:11px;letter-spacing:.5px;white-space:nowrap;opacity:0;pointer-events:none;transition:all .3s;z-index:200"></div>
 
+<script src="js/api.js"></script>
 <script>
+/* ══════════════════════════════════════
+   PROFILE + PORTFOLIO  (Backend/server.js)
+══════════════════════════════════════ */
+let PF_LIVE = false;   // portfolio backed by API?
+
+function setAvatarImg(url) {
+  const box = document.getElementById('avatarBox');
+  box.querySelector('#avatarEmoji') && (box.querySelector('#avatarEmoji').style.display = 'none');
+  let img = box.querySelector('img');
+  if (!img) { img = document.createElement('img'); box.insertBefore(img, box.querySelector('.avatar-cam')); }
+  img.src = url;
+}
+
+function renderPortfolio(images) {
+  const grid = document.getElementById('pfGrid');
+  // Remove existing tiles but keep the "Add Photos" button
+  grid.querySelectorAll('.pf-tile').forEach(t => t.remove());
+  const addBtn = grid.querySelector('.pf-add');
+
+  images.forEach(im => {
+    const tile = document.createElement('div');
+    tile.className = 'pf-tile';
+    const fname = im.filename || (im.path || '').split('/').pop();
+    tile.innerHTML = `<img src="${im.url}" alt="portfolio">` +
+      (PF_LIVE ? `<button class="pf-del" title="Remove" onclick="removePhoto('${fname}', this)">×</button>` : '');
+    grid.insertBefore(tile, addBtn);
+  });
+
+  document.getElementById('pfCount').textContent =
+    images.length + (PF_LIVE ? ' photo' + (images.length === 1 ? '' : 's') : ' preview');
+  document.querySelector('.pf-note').style.display = PF_LIVE ? 'none' : '';
+}
+
+async function hydrate() {
+  const phot = LenslyAPI.currentPhotographer();
+  if (phot) {
+    if (phot.name)      document.getElementById('pfName').textContent = phot.name;
+    if (phot.specialty) document.getElementById('pfSpec').textContent = String(phot.specialty).replace(/,\s*/g, ' · ');
+    if (phot.rating)    document.getElementById('pfRating').textContent = phot.rating + ' (' + (phot.total_reviews || 0) + ' reviews)';
+    if (phot.avatar_url || phot.avatar_path) setAvatarImg(LenslyAPI.assetUrl(phot.avatar_url || phot.avatar_path));
+  }
+
+  // Pull live portfolio when signed in + backend reachable
+  if (LenslyAPI.isLoggedIn() && phot) {
+    try {
+      const res = await LenslyAPI.getPortfolio(phot.id);
+      if (res.images && res.images.length) { PF_LIVE = true; renderPortfolio(res.images); }
+      else { PF_LIVE = true; renderPortfolio([]); }   // no photos yet → empty live grid
+    } catch (e) { /* offline → keep dummy tiles */ }
+  }
+}
+
+/* ── Avatar upload ── */
+document.getElementById('avatarInput').addEventListener('change', async function () {
+  const file = this.files[0];
+  if (!file) return;
+  setAvatarImg(URL.createObjectURL(file));           // instant local preview
+  const phot = LenslyAPI.currentPhotographer();
+  if (LenslyAPI.isLoggedIn() && phot) {
+    try { const r = await LenslyAPI.uploadAvatar(phot.id, file); setAvatarImg(r.url); showToast('Profile photo updated'); }
+    catch (err) { showToast(err.offline ? 'Saved locally (backend offline)' : (err.message || 'Upload failed')); }
+  } else {
+    showToast('Preview only — sign in to save');
+  }
+});
+
+/* ── Portfolio upload ── */
+document.getElementById('portfolioInput').addEventListener('change', async function () {
+  const files = this.files;
+  if (!files.length) return;
+  const phot = LenslyAPI.currentPhotographer();
+
+  if (LenslyAPI.isLoggedIn() && phot) {
+    showToast('Uploading ' + files.length + ' photo' + (files.length === 1 ? '' : 's') + '…');
+    try {
+      await LenslyAPI.uploadPortfolio(phot.id, files);
+      const res = await LenslyAPI.getPortfolio(phot.id);
+      PF_LIVE = true; renderPortfolio(res.images || []);
+      showToast('Portfolio updated');
+    } catch (err) {
+      showToast(err.offline ? 'Backend offline — showing local preview' : (err.message || 'Upload failed'));
+      localPreview(files);
+    }
+  } else {
+    localPreview(files);
+    showToast('Preview only — sign in to save');
+  }
+  this.value = '';
+});
+
+// Local (offline / not-signed-in) preview — replaces the dummy tiles
+function localPreview(files) {
+  const imgs = Array.prototype.map.call(files, f => ({ url: URL.createObjectURL(f), filename: f.name }));
+  renderPortfolio(imgs);
+}
+
+async function removePhoto(filename, btn) {
+  const phot = LenslyAPI.currentPhotographer();
+  if (PF_LIVE && LenslyAPI.isLoggedIn() && phot) {
+    try { await LenslyAPI.deletePortfolioImage(phot.id, filename); }
+    catch (err) { showToast(err.message || 'Could not remove'); return; }
+  }
+  btn.closest('.pf-tile').remove();
+  showToast('Photo removed');
+}
+
 function toggleEdit(id) {
   const field = document.getElementById(id);
   document.querySelectorAll('.edit-field.show').forEach(f => {
@@ -329,11 +499,15 @@ function showToast(msg) {
   }, 2400);
 }
 
-function confirmLogout() {
-  if (confirm('Are you sure you want to log out?')) {
-    showToast('Logged out');
-  }
+async function confirmLogout() {
+  if (!confirm('Are you sure you want to log out?')) return;
+  try { await LenslyAPI.logout(); } catch (e) {}
+  showToast('Logged out');
+  setTimeout(() => window.location.href = 'lensly-x-login.html', 700);
 }
+
+/* Init */
+hydrate();
 </script>
 <script src="js/theme.js"></script>
 </body>

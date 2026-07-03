@@ -558,7 +558,54 @@
         <span class="section-card-title">Notes for Photographer <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">(Optional)</span></span>
       </div>
       <div class="section-card-body">
-        <textarea class="notes-input" placeholder="Vibe you're going for, important moments to capture, special requests…"></textarea>
+        <textarea class="notes-input" id="notesInput" placeholder="Vibe you're going for, important moments to capture, special requests…"></textarea>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════
+         SECTION 7 — YOUR DETAILS (customer identity + photos)
+    ══════════════════════════ -->
+    <div class="section-card mt-12 fade-up-5">
+      <div class="section-card-header">
+        <span class="section-card-icon">🙋</span>
+        <span class="section-card-title">Your Details</span>
+      </div>
+      <div class="section-card-body" style="display:flex;flex-direction:column;gap:12px">
+
+        <!-- Avatar upload -->
+        <div style="display:flex;align-items:center;gap:14px">
+          <div id="custAvatar" onclick="document.getElementById('custAvatarInput').click()"
+               style="width:60px;height:60px;border-radius:50%;border:1.5px solid var(--accent);background:var(--surface2);
+                      display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;overflow:hidden;flex-shrink:0;position:relative">
+            <span id="custAvatarEmoji">🙂</span>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--text)">Profile photo <span style="font-size:10px;color:var(--muted)">(optional)</span></div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">Tap the circle to upload. Helps your photographer recognise you.</div>
+          </div>
+          <input type="file" id="custAvatarInput" accept="image/*" hidden>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="custName">Full Name</label>
+          <input class="input" type="text" id="custName" placeholder="e.g. Ananya Sharma">
+        </div>
+        <div class="input-group">
+          <label class="input-label" for="custPhone">Phone</label>
+          <input class="input" type="tel" id="custPhone" placeholder="+91 ·····">
+        </div>
+
+        <!-- Reference photos -->
+        <div>
+          <label class="input-label">Reference / Moodboard Photos <span style="color:var(--muted)">(optional)</span></label>
+          <div id="refGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px">
+            <button type="button" onclick="document.getElementById('refInput').click()"
+                    style="aspect-ratio:1/1;border:1.5px dashed var(--border-hi);background:transparent;border-radius:var(--r-sm);
+                           color:var(--muted);cursor:pointer;font-size:20px">+</button>
+          </div>
+          <input type="file" id="refInput" accept="image/*" multiple hidden>
+        </div>
+
       </div>
     </div>
 
@@ -888,15 +935,57 @@ function validateAndContinue() {
     purposes   : getSelectedPurposes(),
     addons,
     addonCosts,
+    notes      : (document.getElementById('notesInput') || {}).value || '',
+  };
+
+  /* ── Customer identity (used by 05-review → POST /api/bookings) ── */
+  const customer = {
+    name   : (document.getElementById('custName')  || {}).value || '',
+    phone  : (document.getElementById('custPhone') || {}).value || '',
+    avatar : window.__custAvatar || ''   // data URL preview, if chosen
   };
 
   /* ── Save to sessionStorage ── */
   try {
     sessionStorage.setItem('lensly_details', JSON.stringify(details));
+    sessionStorage.setItem('lensly_customer', JSON.stringify(customer));
   } catch(e) {}
 
   window.location.href = '05-review.html';
 }
+
+/* ══════════════════════════════════════
+   CUSTOMER PHOTO UPLOADS
+   Avatar upload has a backend home at
+   Backend/server.js once a Customers table
+   is added; for now we keep a local preview
+   and hand the booking name/phone to the API.
+══════════════════════════════════════ */
+window.__custAvatar = '';
+document.getElementById('custAvatarInput').addEventListener('change', function () {
+  const f = this.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    window.__custAvatar = e.target.result;
+    const box = document.getElementById('custAvatar');
+    box.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+  };
+  reader.readAsDataURL(f);
+});
+
+document.getElementById('refInput').addEventListener('change', function () {
+  const grid = document.getElementById('refGrid');
+  const addBtn = grid.querySelector('button');
+  Array.prototype.forEach.call(this.files, f => {
+    const url = URL.createObjectURL(f);
+    const tile = document.createElement('div');
+    tile.style.cssText = 'aspect-ratio:1/1;border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--border)';
+    tile.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
+    grid.insertBefore(tile, addBtn);
+  });
+  this.value = '';
+});
 
 /* ══════════════════════════════════════
    RESTORE state if user presses back
@@ -954,6 +1043,21 @@ function restoreDetails() {
         }
       });
     }
+
+    // Notes
+    if (d.notes && document.getElementById('notesInput')) document.getElementById('notesInput').value = d.notes;
+  } catch(e) {}
+
+  // Customer identity + avatar
+  try {
+    const c = JSON.parse(sessionStorage.getItem('lensly_customer') || '{}');
+    if (c.name)  document.getElementById('custName').value  = c.name;
+    if (c.phone) document.getElementById('custPhone').value = c.phone;
+    if (c.avatar) {
+      window.__custAvatar = c.avatar;
+      document.getElementById('custAvatar').innerHTML =
+        `<img src="${c.avatar}" style="width:100%;height:100%;object-fit:cover">`;
+    }
   } catch(e) {}
 }
 
@@ -969,6 +1073,7 @@ window.addEventListener('load', () => {
   }
 });
 </script>
+<script src="js/api.js"></script>
 <script src="js/theme.js"></script>
 </body>
 </html>

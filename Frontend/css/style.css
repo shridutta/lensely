@@ -1,4 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap');
+/* ── Fonts ──────────────────────────────────────────────────────
+   'Inter' added for readable body/UI text on mobile.
+   Cormorant Garamond (display) and DM Mono (labels) kept as-is.
+   To revert to the original look, see the commented block in :root
+   below and remove Inter from this import.
+   ---------------------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Inter:wght@400;500;600;700&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -15,8 +21,25 @@
   --danger:    #c05c3a;
   --success:   #5a9a6e;
 
+  /* ── Typography ───────────────────────────────────────────────
+     CENTRALISED FONT CHOICES — change these in one place.
+
+     CURRENT (readable-on-mobile) setup:
+       --serif → big display / headings
+       --sans  → body & UI text  (NEW — improves mobile legibility)
+       --mono  → small labels, buttons, code-style accents
+       --font-body → what <body> actually uses (defaults to --sans)
+
+     ── TO REVERT to the original all-mono body look, set:
+        --font-body: var(--mono);
+        …and (optionally) drop Inter from the @import at the top.
+     ------------------------------------------------------------- */
   --serif:  'Cormorant Garamond', Georgia, serif;
+  --sans:   'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --mono:   'DM Mono', 'Courier New', monospace;
+
+  /* Body/UI font. Original design used var(--mono) here. */
+  --font-body: var(--sans);
 
   --r-sm:  6px;
   --r-md:  12px;
@@ -86,16 +109,34 @@
   --plum-bg2:  #e7d6e6;
 }
 
-html { font-size: 16px; }
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;   /* stop iOS from auto-inflating text */
+  text-rendering: optimizeLegibility;
+}
 
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--mono);
+  font-family: var(--font-body);    /* was: var(--mono) */
+  font-size: 14px;                  /* comfortable base for small screens */
   min-height: 100vh;
-  line-height: 1.5;
+  line-height: 1.6;
+  letter-spacing: 0.1px;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Keep form controls on the readable body font too */
+input, textarea, select, button { font-family: inherit; }
+
+/* Nudge very small UI text up a touch on phones so it stays legible.
+   (Design uses many 9–11px labels; this lifts the floor without
+    disturbing the layout.) */
+@media (max-width: 430px) {
+  .body-sm { font-size: 12.5px; line-height: 1.65; }
+  .flow-card-desc, .subproject-desc { font-size: 12px; line-height: 1.65; }
 }
 
 /* ── Global light/dark toggle ── */

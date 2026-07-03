@@ -1,0 +1,16 @@
+{
+  "name": "lensly-backend",
+  "version": "1.0.0",
+  "description": "Lensly backend — Excel file as database (MVP)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "multer": "^2.2.0",
+    "xlsx": "^0.18.5"
+  }
+}
