@@ -26,6 +26,21 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false }
 });
 
+// Startup diagnostic — the API MUST use the service_role key so it can
+// bypass RLS. If the anon key is used by mistake, reads succeed but RLS
+// hides every row (endpoints return empty lists, not errors).
+try {
+  const claim = JSON.parse(Buffer.from(String(SERVICE_KEY).split('.')[1] || '', 'base64url').toString());
+  if (claim.role === 'service_role') {
+    console.log('  ✓ Supabase: service_role key detected (RLS bypassed)');
+  } else {
+    console.warn(`  ⚠ Supabase: key role is "${claim.role}", expected "service_role".`);
+    console.warn('    RLS will hide all rows — reads return empty. Set SUPABASE_SERVICE_ROLE_KEY to the service_role secret.');
+  }
+} catch (e) {
+  console.warn('  ⚠ Supabase: could not read the key role claim — verify SUPABASE_SERVICE_ROLE_KEY.');
+}
+
 const AVATAR_BUCKET    = 'avatars';
 const PORTFOLIO_BUCKET = 'portfolio';
 
