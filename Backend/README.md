@@ -1,148 +1,145 @@
-# Lensly Backend — Excel as Database (MVP)
+# Lensly Backend — Express + Supabase
 
-All data is stored in a single Excel file: `data/lensly.xlsx`
+Node/Express API backed by **Supabase**:
+
+- **Postgres** — photographers, bookings, portfolio (replaces `data/lensly.xlsx`)
+- **Storage** — `avatars` + `portfolio` buckets (replaces local `uploads/`)
+- **Auth** — custom **JWT + bcrypt** (`auth-api.js`), photographer rows in Postgres
+
+Deploy target: **Render** (free) + **Supabase** (free). Frontend deploys separately to Cloudflare Pages.
 
 ---
 
-## Setup (first time)
+## Local development
 
 ```bash
-# 1. Install dependencies (one time only)
+cp .env.example .env      # fill in SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, JWT_SECRET
 npm install
-
-# 2. Start the server
-node server.js
+npm start                 # http://localhost:3000  (health: /api/health)
 ```
 
-Server starts on **http://localhost:3000**
-Excel file is created automatically at `data/lensly.xlsx` on first run.
+> The `service_role` key bypasses RLS — keep it server-side only, never ship it to the browser.
 
 ---
 
-## File Structure
+# Free-Tier Deployment (Supabase + Render — free forever)
 
-```
-lensly-backend/
-├── server.js          ← The API server
-├── package.json
-├── data/
-│   └── lensly.xlsx    ← All data lives here (open in Excel anytime)
-└── public/
-    └── lensly-x-inbox.html  ← Updated inbox page (copy to your IIS folder)
-```
+## 1. Supabase setup
 
----
+1. Create a project at [supabase.com](https://supabase.com) (pick a region near your users, e.g. Mumbai / Singapore). Save the DB password.
+2. **SQL Editor → New query** → paste **all** of [`supabase/schema.sql`](supabase/schema.sql) → **Run**.
+   Creates the tables + indexes, enables RLS, creates the public `avatars` / `portfolio` storage buckets, and seeds the demo photographers.
+3. **Project Settings → API** → copy:
+   - **Project URL** → `SUPABASE_URL`
+   - **`service_role`** secret → `SUPABASE_SERVICE_ROLE_KEY`
 
-## Excel Sheets
+> Free tier pauses a project after ~7 days of inactivity — un-pause it from the dashboard when that happens.
 
-### Sheet 1 — Photographers
-| Column | Description |
-|--------|-------------|
-| id | Unique ID (e.g. PHT-001) |
-| name | Full name |
-| specialty | What they shoot |
-| service_type | Photographer / Cinematographer / etc. |
-| city, state | Location |
-| phone, email | Contact |
-| half_day_rate | ₹ for 6 hrs |
-| full_day_rate | ₹ for 12 hrs (should = 2× half) |
-| ot_rate_per_hr | Overtime hourly rate |
-| status | Active / Inactive |
-| outstation | Yes / No |
+## 2. Git repo setup (commands)
 
-### Sheet 2 — BookingRequests
-| Column | Description |
-|--------|-------------|
-| id | Unique booking ID |
-| booking_ref | Reference shown to clients (LNS-XXXXX) |
-| client_name | Who is booking |
-| photographer_id | Links to Photographers sheet |
-| package | Half Day / Full Day |
-| shoot_date | YYYY-MM-DD |
-| status | **Pending / Accepted / Rejected / Completed** |
-| responded_on | Timestamp when photographer accepted/rejected |
+Run from the backend folder (this repo's root == the backend):
 
----
-
-## API Endpoints
-
-### Photographers
-| Method | URL | What it does |
-|--------|-----|-------------|
-| GET | /api/photographers | List all photographers |
-| GET | /api/photographers/:id | Get one |
-| POST | /api/photographers | Add new photographer |
-| PATCH | /api/photographers/:id | Update (status, rates, etc.) |
-| DELETE | /api/photographers/:id | Remove |
-
-**Filter examples:**
-```
-GET /api/photographers?status=Active
-GET /api/photographers?service_type=Cinematographer
-GET /api/photographers?city=Mumbai
-```
-
-### Booking Requests
-| Method | URL | What it does |
-|--------|-----|-------------|
-| GET | /api/bookings | List all bookings |
-| GET | /api/bookings?photographer_id=PHT-001 | Filter by photographer |
-| GET | /api/bookings?status=Pending | Filter by status |
-| POST | /api/bookings | Create new booking (from client app) |
-| PATCH | /api/bookings/:id/accept | Photographer accepts → updates Excel |
-| PATCH | /api/bookings/:id/reject | Photographer declines → updates Excel |
-| PATCH | /api/bookings/:id/complete | Mark shoot as done |
-
-### Dashboard
-| Method | URL | What it does |
-|--------|-----|-------------|
-| GET | /api/summary | Counts + revenue summary |
-
----
-
-## Testing the API (quick checks)
-
-Open these in your browser to verify:
-
-```
-http://localhost:3000/api/photographers
-http://localhost:3000/api/bookings
-http://localhost:3000/api/summary
-```
-
-Or use Postman / curl:
 ```bash
-# Accept a booking
-curl -X PATCH http://localhost:3000/api/bookings/BKG-001/accept
+git init
+git checkout -b main
+git add -A
+git commit -m "Lensly backend — Express + Supabase"
+```
 
-# Reject a booking with a reason
-curl -X PATCH http://localhost:3000/api/bookings/BKG-001/reject \
-  -H "Content-Type: application/json" \
-  -d '{"reason": "Already booked on this date"}'
+`.env` is git-ignored (see `.gitignore`), so your secrets never get committed. Only `.env.example` ships.
 
-# Add a new photographer
-curl -X POST http://localhost:3000/api/photographers \
+## 3. Push the local code to GitHub
+
+Create an **empty** repo at <https://github.com/new> named `lensly-backend` (no README / .gitignore / license), then:
+
+```bash
+git remote add origin https://github.com/<your-username>/lensly-backend.git
+git push -u origin main
+```
+
+(SSH form: `git remote add origin git@github.com:<your-username>/lensly-backend.git`)
+
+## 4. Render setup
+
+1. [render.com](https://render.com) → **New → Blueprint** → connect the `lensly-backend` repo. Render reads [`render.yaml`](render.yaml) automatically (web service, `npm install` / `npm start`, health check `/api/health`).
+2. Set the environment variables in the dashboard:
+
+   | Key | Value |
+   |-----|-------|
+   | `SUPABASE_URL` | from step 1 |
+   | `SUPABASE_SERVICE_ROLE_KEY` | from step 1 (secret) |
+   | `CORS_ORIGIN` | `*` to start, later your Cloudflare Pages domain |
+   | `JWT_SECRET` | auto-generated by Render (`generateValue`) |
+   | `JWT_EXPIRES_IN` | `7d` |
+
+3. **Create / Deploy** → wait for the build → open `https://<your-service>.onrender.com/api/health`.
+4. Point the apps at the Render URL: `VITE_API_BASE` (React) and `localStorage.lensly_api_base` (static Frontend).
+
+> Render's free web service sleeps after ~15 min idle — the first request after that cold-starts in a few tens of seconds.
+
+## 5. Test the deployed API (samples)
+
+Replace `$API` with your Render URL, e.g. `export API=https://lensly-api.onrender.com`.
+
+```bash
+# 1) Health
+curl $API/api/health
+# → {"success":true,"status":"ok","time":"..."}
+
+# 2) List seeded photographers
+curl $API/api/photographers
+
+# 3) Set a password for a seeded photographer (one-time)
+curl -X POST $API/api/auth/photographer/register \
   -H "Content-Type: application/json" \
-  -d '{"name":"Raj Sharma","service_type":"Drone Pilot","city":"Delhi","state":"Delhi","half_day_rate":12000,"full_day_rate":24000,"ot_rate_per_hr":2000}'
+  -d '{"photographer_id":"PHT-001","password":"sofia@lensly"}'
+
+# 4) Log in → returns a JWT
+curl -X POST $API/api/auth/photographer/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"sofia@example.com","password":"sofia@lensly"}'
+# copy the "token" from the response:
+export TOKEN=paste-jwt-here
+
+# 5) Current profile (auth required)
+curl $API/api/auth/me -H "Authorization: Bearer $TOKEN"
+
+# 6) Create a booking (public — customer books a slot)
+curl -X POST $API/api/bookings \
+  -H "Content-Type: application/json" \
+  -d '{"client_name":"Ananya","photographer_id":"PHT-001","photographer":"Sofia Reyes","package":"Full Day","amount":34560}'
+
+# 7) Accept a booking (auth required) — use the id from step 6
+curl -X PATCH $API/api/bookings/<BOOKING_ID>/accept -H "Authorization: Bearer $TOKEN"
+
+# 8) Upload an avatar to Supabase Storage (auth required)
+curl -X POST $API/api/photographers/PHT-001/avatar \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "avatar=@/path/to/photo.jpg"
+
+# 9) Dashboard summary
+curl $API/api/summary
 ```
 
 ---
 
-## Connecting the Frontend (IIS)
+## API reference
 
-1. Copy `public/lensly-x-inbox.html` to your IIS `photobook/` folder
-2. Keep the Node server running on port 3000 alongside IIS
-3. The inbox page automatically calls `http://localhost:3000/api` to load and update bookings
+| Method | Path | Auth | Notes |
+|--------|------|------|-------|
+| GET  | `/api/health` | – | Render health check |
+| POST | `/api/auth/photographer/login` | – | JWT login |
+| POST | `/api/auth/photographer/register` | – | admin: set a password |
+| GET  | `/api/auth/me` | Bearer | current photographer |
+| GET  | `/api/photographers` | – | list (filters: `status`, `service_type`, `city`) |
+| GET  | `/api/photographers/:id` | – | one + `portfolio_urls` |
+| POST | `/api/photographers` | – | create |
+| PATCH/DELETE | `/api/photographers/:id` | Bearer | update / delete |
+| POST/GET/DELETE | `/api/photographers/:id/avatar` | Bearer (write) | Supabase Storage |
+| POST/GET/DELETE | `/api/photographers/:id/portfolio` | Bearer (write) | Supabase Storage |
+| GET  | `/api/bookings` | – | list (filters: `photographer_id`, `status`) |
+| POST | `/api/bookings` | – | customer books a slot |
+| PATCH | `/api/bookings/:id/accept` \| `/reject` \| `/complete` | Bearer | photographer actions |
+| GET  | `/api/summary` | – | dashboard counts |
 
-> If your IIS and the Node server are on different machines,
-> replace `localhost:3000` in the HTML with your server's IP address.
-
----
-
-## Viewing/Editing data directly
-
-Just open `data/lensly.xlsx` in Excel at any time.
-You can edit values directly in Excel — they take effect the next time the server reads the file.
-
-> Do not leave the file open in Excel while the server is writing to it —
-> close and reopen to see fresh data.
+Data model lives in [`db.js`](db.js); schema in [`supabase/schema.sql`](supabase/schema.sql).

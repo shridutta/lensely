@@ -1,0 +1,27 @@
+# Render deployment blueprint for the Lensly backend.
+# Assumes this file sits at the ROOT of a dedicated backend repo
+# (i.e. the repo == the contents of Backend/). If you instead deploy
+# from a monorepo where the backend is in a subfolder, add:
+#     rootDir: Backend
+# Render → New → Blueprint, point it at the repo.
+# Set the secret env vars in the Render dashboard (marked sync:false).
+services:
+  - type: web
+    name: lensly-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: CORS_ORIGIN
+        sync: false          # set to your Cloudflare Pages domain
