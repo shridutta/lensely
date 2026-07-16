@@ -26,20 +26,28 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false }
 });
 
-// Startup diagnostic — the API MUST use the service_role key so it can
-// bypass RLS. If the anon key is used by mistake, reads succeed but RLS
-// hides every row (endpoints return empty lists, not errors).
-try {
-  const claim = JSON.parse(Buffer.from(String(SERVICE_KEY).split('.')[1] || '', 'base64url').toString());
-  if (claim.role === 'service_role') {
-    console.log('  ✓ Supabase: service_role key detected (RLS bypassed)');
-  } else {
-    console.warn(`  ⚠ Supabase: key role is "${claim.role}", expected "service_role".`);
-    console.warn('    RLS will hide all rows — reads return empty. Set SUPABASE_SERVICE_ROLE_KEY to the service_role secret.');
+// Startup diagnostic — the API MUST use a key that bypasses RLS, or
+// reads succeed but RLS hides every row (endpoints return empty lists,
+// not errors). Supabase has two key formats:
+//   • new:    sb_secret_…      (bypasses RLS)  vs sb_publishable_… (anon)
+//   • legacy: service_role JWT (bypasses RLS)  vs anon JWT
+(function checkKey() {
+  const key = String(SERVICE_KEY || '').trim();
+  if (key.startsWith('sb_secret_'))      return console.log('  ✓ Supabase: secret key detected (new format, RLS bypassed)');
+  if (key.startsWith('sb_publishable_')) return warn('publishable (new format) — this respects RLS', 'sb_secret_… secret key');
+  try {
+    const role = JSON.parse(Buffer.from(key.split('.')[1] || '', 'base64url').toString()).role;
+    if (role === 'service_role') return console.log('  ✓ Supabase: service_role key detected (legacy JWT, RLS bypassed)');
+    return warn(`legacy "${role}" key`, 'service_role key');
+  } catch (e) {
+    console.warn('  ⚠ Supabase: SUPABASE_SERVICE_ROLE_KEY is not a recognised key.');
+    console.warn('    Use the "sb_secret_…" secret key (or the legacy service_role JWT) — check for stray quotes/spaces.');
   }
-} catch (e) {
-  console.warn('  ⚠ Supabase: could not read the key role claim — verify SUPABASE_SERVICE_ROLE_KEY.');
-}
+  function warn(is, want) {
+    console.warn(`  ⚠ Supabase: key looks like the ${is}.`);
+    console.warn(`    RLS will hide all rows — reads return empty. Use the ${want} instead.`);
+  }
+})();
 
 const AVATAR_BUCKET    = 'avatars';
 const PORTFOLIO_BUCKET = 'portfolio';
@@ -137,6 +145,7 @@ async function listBookings(filters = {}) {
   let q = supabase.from('booking_requests').select('*');
   if (filters.photographer_id) q = q.eq('photographer_id', filters.photographer_id);
   if (filters.status)          q = q.eq('status', filters.status);
+  if (filters.client_phone)    q = q.eq('client_phone', filters.client_phone);   // guest "My Bookings"
   return unwrap(await q.order('requested_on', { ascending: false }));
 }
 async function getBookingById(id) {

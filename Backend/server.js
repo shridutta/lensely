@@ -191,7 +191,7 @@ app.delete('/api/photographers/:id', requireAuth, async (req, res) => {
 // ═══════════════════════════════════════════════════════════════
 app.get('/api/bookings', async (req, res) => {
   try {
-    const rows = await db.listBookings({ photographer_id: req.query.photographer_id, status: req.query.status });
+    const rows = await db.listBookings({ photographer_id: req.query.photographer_id, status: req.query.status, client_phone: req.query.client_phone });
     res.json({ success: true, count: rows.length, data: rows });
   } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
