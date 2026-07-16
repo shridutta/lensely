@@ -175,6 +175,16 @@ async function updateBooking(id, patch) {
   return data || null;
 }
 
+// Dates a photographer is already committed on (drives the availability calendar)
+async function listBookedDates(photographerId) {
+  const rows = unwrap(await supabase.from('booking_requests')
+    .select('shoot_date,status')
+    .eq('photographer_id', photographerId)
+    .in('status', ['Pending', 'Accepted'])
+    .not('shoot_date', 'is', null));
+  return [...new Set(rows.map(r => r.shoot_date).filter(Boolean))].sort();
+}
+
 // ═══════════════════════════════════════════════════════════════
 //  STORAGE (replaces local /uploads)
 // ═══════════════════════════════════════════════════════════════
@@ -195,6 +205,6 @@ module.exports = {
   listPhotographers, getPhotographerById, getPhotographerByEmail,
   createPhotographer, updatePhotographer, deletePhotographer,
   listPortfolio, addPortfolioImages, deletePortfolioImageByPath, clearPortfolio,
-  listBookings, getBookingById, createBooking, updateBooking,
+  listBookings, getBookingById, createBooking, updateBooking, listBookedDates,
   uploadToBucket, removeFromBucket
 };

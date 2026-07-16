@@ -151,6 +151,17 @@ app.get('/api/photographers', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
+// GET /api/photographers/:id/availability — dates already booked (Pending/Accepted),
+// used by the frontend calendar to grey out unavailable days.
+app.get('/api/photographers/:id/availability', async (req, res) => {
+  try {
+    const phot = await db.getPhotographerById(req.params.id);
+    if (!phot) return res.status(404).json({ success: false, error: 'Not found' });
+    const booked = await db.listBookedDates(req.params.id);
+    res.json({ success: true, booked });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
 app.get('/api/photographers/:id', async (req, res) => {
   try {
     const phot = await db.getPhotographerById(req.params.id);
