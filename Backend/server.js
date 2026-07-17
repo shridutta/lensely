@@ -106,13 +106,40 @@ app.post('/api/photographers/:id/portfolio', requireAuth, portfolioUpload.array(
   } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
+// POST /api/photographers/:id/portfolio/links — add REMOTE image URLs
+// (no storage involved: photographers link photos from their existing
+//  folio — own site, Instagram CDN, Drive, anywhere that serves an image)
+app.post('/api/photographers/:id/portfolio/links', requireAuth, async (req, res) => {
+  try {
+    const urls = (req.body.urls || []).map((u) => String(u).trim()).filter((u) => /^https?:\/\//i.test(u));
+    if (!urls.length) return res.status(400).json({ success: false, error: 'Provide at least one http(s) image URL' });
+    const phot = await db.getPhotographerById(req.params.id);
+    if (!phot) return res.status(404).json({ success: false, error: 'Photographer not found' });
+
+    await db.addPortfolioImages(req.params.id, urls.map((u) => ({ path: '', url: u })));
+    const all = await db.listPortfolio(req.params.id);
+    res.json({ success: true, added: urls.length, total: all.length, images: all });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+// DELETE /api/photographers/:id/portfolio/image/:imageId — remove one entry
+app.delete('/api/photographers/:id/portfolio/image/:imageId', requireAuth, async (req, res) => {
+  try {
+    const rows = await db.deletePortfolioImageById(req.params.id, req.params.imageId);
+    const removed = rows && rows[0];
+    if (removed && removed.path) await db.removeFromBucket(db.PORTFOLIO_BUCKET, removed.path).catch(() => {});
+    const all = await db.listPortfolio(req.params.id);
+    res.json({ success: true, deleted: rows.length, total: all.length });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
 // GET /api/photographers/:id/portfolio
 app.get('/api/photographers/:id/portfolio', async (req, res) => {
   try {
     const images = await db.listPortfolio(req.params.id);
     res.json({
       success: true, count: images.length,
-      images: images.map(im => ({ path: im.path, filename: im.path.split('/').pop(), url: im.url }))
+      images: images.map(im => ({ id: im.id, path: im.path, filename: (im.path || '').split('/').pop(), url: im.url, remote: !im.path }))
     });
   } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });

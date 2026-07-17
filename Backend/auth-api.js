@@ -49,6 +49,27 @@ function init(app, db) {
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
   });
 
+  // POST /api/auth/photographer/signup — Lensly X self-registration
+  // Body: { name, email, password, service_type?, city?, phone?, specialty?, half_day_rate?, full_day_rate? }
+  app.post('/api/auth/photographer/signup', async (req, res) => {
+    try {
+      const b = req.body || {};
+      if (!b.name || !b.email || !b.password)
+        return res.status(400).json({ success: false, error: 'name, email and password are required' });
+      if (String(b.password).length < 8)
+        return res.status(400).json({ success: false, error: 'Password must be at least 8 characters' });
+
+      const existing = await db.getPhotographerByEmail(b.email);
+      if (existing) return res.status(409).json({ success: false, error: 'An account with this email already exists' });
+
+      const created = await db.createPhotographer(b);
+      await db.updatePhotographer(created.id, { password_hash: await bcrypt.hash(b.password, 10) });
+
+      const token = signToken({ id: created.id, name: created.name, email: created.email, service_type: created.service_type, role: 'photographer' });
+      res.status(201).json({ success: true, token, expires_in: JWT_EXPIRES, photographer: created });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+  });
+
   // POST /api/auth/photographer/login   Body: { email, password }
   app.post('/api/auth/photographer/login', async (req, res) => {
     try {

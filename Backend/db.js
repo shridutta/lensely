@@ -133,6 +133,10 @@ async function deletePortfolioImageByPath(photographerId, path) {
   return unwrap(await supabase.from('portfolio_images')
     .delete().eq('photographer_id', photographerId).eq('path', path).select());
 }
+async function deletePortfolioImageById(photographerId, imageId) {
+  return unwrap(await supabase.from('portfolio_images')
+    .delete().eq('photographer_id', photographerId).eq('id', imageId).select());
+}
 async function clearPortfolio(photographerId) {
   return unwrap(await supabase.from('portfolio_images')
     .delete().eq('photographer_id', photographerId).select());
@@ -204,7 +208,7 @@ module.exports = {
   supabase, AVATAR_BUCKET, PORTFOLIO_BUCKET, newId, nowIso,
   listPhotographers, getPhotographerById, getPhotographerByEmail,
   createPhotographer, updatePhotographer, deletePhotographer,
-  listPortfolio, addPortfolioImages, deletePortfolioImageByPath, clearPortfolio,
+  listPortfolio, addPortfolioImages, deletePortfolioImageByPath, deletePortfolioImageById, clearPortfolio,
   listBookings, getBookingById, createBooking, updateBooking, listBookedDates,
   uploadToBucket, removeFromBucket
 };
