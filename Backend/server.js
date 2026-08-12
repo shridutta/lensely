@@ -298,6 +298,76 @@ app.get('/api/summary', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
+// ═══════════════════════════════════════════════════════════════
+//  KPIs — dashboard stat strip for the Take Booking page
+//  (Booked This Month / Received This Month / To Collect).
+//  Values are computed LIVE from booking_requests; a row in the
+//  admin-managed `kpis` table (see supabase/kpi-schema.sql) overrides
+//  the computed value for that key, or adds an entirely custom KPI.
+// ═══════════════════════════════════════════════════════════════
+function monthBounds(d = new Date()) {
+  const start = new Date(d.getFullYear(), d.getMonth(), 1);
+  const end   = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+  return { start, end };
+}
+
+async function computeLiveKpis() {
+  const bookings = await db.listBookings();
+  const { start, end } = monthBounds();
+  const inThisMonth = (iso) => { if (!iso) return false; const d = new Date(iso); return d >= start && d < end; };
+
+  const bookedThisMonth = bookings.filter(b => inThisMonth(b.requested_on)).length;
+  const receivedThisMonth = bookings
+    .filter(b => (b.status === 'Accepted' || b.status === 'Completed') && inThisMonth(b.responded_on || b.requested_on))
+    .reduce((s, b) => s + (Number(b.total) || 0), 0);
+  const toCollect = bookings
+    .filter(b => b.status === 'Pending' || b.status === 'Accepted')
+    .reduce((s, b) => s + (Number(b.total) || 0), 0);
+
+  return [
+    { key: 'booked_this_month',   label: 'Booked This Month',   value: bookedThisMonth,   unit: '' },
+    { key: 'received_this_month', label: 'Received This Month', value: receivedThisMonth, unit: '₹' },
+    { key: 'to_collect',          label: 'To Collect',          value: toCollect,         unit: '₹' },
+  ];
+}
+
+// GET /api/kpis — public read (the stat strip shows before the admin PIN is entered)
+app.get('/api/kpis', async (req, res) => {
+  try {
+    const live = await computeLiveKpis();
+    const overrides = await db.listKpiOverrides();
+    const byKey = Object.fromEntries(overrides.map(o => [o.key, o]));
+
+    // Live defaults, overridden where an admin row exists for that key
+    const merged = live.map(k => byKey[k.key] ? { ...k, ...byKey[k.key], live: false } : { ...k, live: true });
+    // Plus any fully custom KPIs an admin added beyond the three defaults
+    const liveKeys = new Set(live.map(k => k.key));
+    const custom = overrides.filter(o => !liveKeys.has(o.key)).map(o => ({ ...o, live: false }));
+
+    res.json({ success: true, data: [...merged, ...custom] });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+// PUT /api/kpis/:key — admin only. Body: { label, value, unit? }
+app.put('/api/kpis/:key', requireAuth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') return res.status(403).json({ success: false, error: 'Admin access required' });
+    const { label, value, unit } = req.body || {};
+    if (!label || value === undefined) return res.status(400).json({ success: false, error: 'label and value are required' });
+    const row = await db.upsertKpiOverride(req.params.key, { label, value: Number(value) || 0, unit });
+    res.json({ success: true, data: row });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+// DELETE /api/kpis/:key — admin only. Removes the override (reverts to the live-computed value, for the 3 default keys)
+app.delete('/api/kpis/:key', requireAuth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') return res.status(403).json({ success: false, error: 'Admin access required' });
+    await db.deleteKpiOverride(req.params.key);
+    res.json({ success: true, message: 'Override removed.' });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
 // ── Error handler (multer + fallthrough) ────────────────────────
 app.use((err, req, res, next) => {
   if (err.code === 'LIMIT_FILE_SIZE')

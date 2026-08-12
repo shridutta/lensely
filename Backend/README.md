@@ -123,13 +123,95 @@ curl $API/api/summary
 
 ---
 
+## Real OTP delivery (email + WhatsApp)
+
+`/api/auth/otp/request` and `/verify` send and check a **real, single-use,
+5-minute code** — there is no demo/fake fallback. Until the env vars below
+are set, requests fail with a clear 503, by design (see `notify.js`).
+
+- **Email** — any SMTP provider via Nodemailer: `SMTP_HOST`, `SMTP_PORT`,
+  `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`. Gmail (with an
+  [app password](https://myaccount.google.com/apppasswords)), SendGrid,
+  Mailgun, and Resend's SMTP relay all work unchanged.
+- **WhatsApp** — [Twilio](https://www.twilio.com/whatsapp): `TWILIO_ACCOUNT_SID`,
+  `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM`. The free sandbox number
+  requires each recipient to send `join <sandbox-word>` to it once before
+  they can receive messages — fine for testing, **not** for real users.
+  Production needs an approved WhatsApp Business sender.
+
+Codes are bcrypt-hashed at rest, rate-limited (3 requests / 10 min per
+target, 45s cooldown between requests), expire after 5 minutes, and lock
+out after 5 wrong attempts. See `Backend/supabase/otp-schema.sql` — run it
+once in the Supabase SQL editor alongside `schema.sql`.
+
+Photographer **self-signup** (`/api/auth/photographer/signup`) requires an
+`emailVerificationToken` from a successful `otp/verify` call with
+`role: 'photographer_signup'` — accounts can't be created without first
+proving the applicant owns that email.
+
+---
+
+## Admin PIN (global "Take Booking" tool)
+
+The React app's Home nav has a **Take Booking** page that can record a
+booking for *any* photographer (pick from a dropdown, or add one on the
+spot by name + mobile) — used for phone/walk-in clients. It's gated by a
+**6-digit PIN stored in Supabase**, not hardcoded in the frontend:
+
+- `public.users` (`is_admin = true`, bcrypt-hashed `pin_hash`) — a general
+  accounts table where admin-ness is just a flag, not a dedicated table.
+  See `supabase/users-schema.sql`, which seeds one default admin (**PIN
+  `482917` — change this**).
+- `POST /api/auth/admin/pin/verify` checks the PIN and returns a 2-hour
+  admin JWT. `POST /api/auth/admin/pin/change` (Bearer admin token)
+  rotates it — no redeploy needed.
+- **3 wrong attempts → 5-minute lockout**, enforced both by the browser
+  (instant feedback) and the **server** (per-IP, in-memory — defense in
+  depth in case the frontend gate is bypassed).
+- The admin JWT is also accepted by `PATCH /api/bookings/:id/accept`
+  (that route only checks the token is valid, not its role), so Take
+  Booking can auto-confirm a booking it just recorded.
+
+Rotate the seeded PIN once you're set up:
+```bash
+curl -X POST $API/api/auth/admin/pin/verify -H "Content-Type: application/json" -d '{"pin":"482917"}'
+# copy the token, then:
+curl -X POST $API/api/auth/admin/pin/change -H "Content-Type: application/json" -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -d '{"current_pin":"482917","new_pin":"YOUR-NEW-6-DIGITS"}'
+```
+
+## KPI stat strip
+
+`GET /api/kpis` powers the "Booked This Month / Received This Month / To
+Collect" strip at the top of Take Booking (mirrors
+`Mockup/lensly-x-earnings.html`'s stat-strip). All three are **computed
+live** from `booking_requests` — no manual entry needed out of the box.
+An admin can override any value (or add an entirely custom KPI) via
+`public.kpis` (see `supabase/kpi-schema.sql`):
+
+```bash
+# Override / add a KPI (admin token required)
+curl -X PUT $API/api/kpis/to_collect -H "Content-Type: application/json" -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -d '{"label":"To Collect","value":42000,"unit":"₹"}'
+
+# Remove an override — reverts that key to its live-computed value
+curl -X DELETE $API/api/kpis/to_collect -H "Authorization: Bearer $ADMIN_TOKEN"
+```
+
+---
+
 ## API reference
 
 | Method | Path | Auth | Notes |
 |--------|------|------|-------|
 | GET  | `/api/health` | – | Render health check |
 | POST | `/api/auth/photographer/login` | – | JWT login |
+| POST | `/api/auth/photographer/signup` | – | self-registration; requires `emailVerificationToken` |
 | POST | `/api/auth/photographer/register` | – | admin: set a password |
+| POST | `/api/auth/otp/request` | – | send a real email/WhatsApp code |
+| POST | `/api/auth/otp/verify` | – | check the code; returns a JWT (existing photographer), an `emailVerificationToken` (signup), or `verified:true` (guest/customer) |
+| POST | `/api/auth/admin/pin/verify` | – | check the admin PIN; returns a 2h admin JWT |
+| POST | `/api/auth/admin/pin/change` | Bearer (admin) | rotate the PIN |
 | GET  | `/api/auth/me` | Bearer | current photographer |
 | GET  | `/api/photographers` | – | list (filters: `status`, `service_type`, `city`) |
 | GET  | `/api/photographers/:id` | – | one + `portfolio_urls` |
@@ -137,9 +219,12 @@ curl $API/api/summary
 | PATCH/DELETE | `/api/photographers/:id` | Bearer | update / delete |
 | POST/GET/DELETE | `/api/photographers/:id/avatar` | Bearer (write) | Supabase Storage |
 | POST/GET/DELETE | `/api/photographers/:id/portfolio` | Bearer (write) | Supabase Storage |
-| GET  | `/api/bookings` | – | list (filters: `photographer_id`, `status`) |
-| POST | `/api/bookings` | – | customer books a slot |
-| PATCH | `/api/bookings/:id/accept` \| `/reject` \| `/complete` | Bearer | photographer actions |
+| GET  | `/api/bookings` | – | list (filters: `photographer_id`, `status`, `client_phone`) |
+| POST | `/api/bookings` | – | book a slot (consumer flow and admin Take Booking both use this) |
+| PATCH | `/api/bookings/:id/accept` \| `/reject` \| `/complete` | Bearer | photographer or admin actions |
+| GET  | `/api/kpis` | – | dashboard stat strip (live + admin overrides) |
+| PUT/DELETE | `/api/kpis/:key` | Bearer (admin) | set/remove a KPI override |
 | GET  | `/api/summary` | – | dashboard counts |
 
-Data model lives in [`db.js`](db.js); schema in [`supabase/schema.sql`](supabase/schema.sql).
+Data model lives in [`db.js`](db.js); schema in [`supabase/schema.sql`](supabase/schema.sql)
+(+ `otp-schema.sql`, `users-schema.sql`, `kpi-schema.sql` — run all four once).

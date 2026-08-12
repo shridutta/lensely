@@ -93,6 +93,15 @@ async function getPhotographerByEmail(email) {
   return data || null;
 }
 
+// Phones are stored as free-text (e.g. "+91 98000 00001"), so match on the
+// last 10 digits rather than requiring an exact string match.
+async function getPhotographerByPhone(phone) {
+  const digits = String(phone || '').replace(/\D/g, '').slice(-10);
+  if (!digits) return null;
+  const rows = unwrap(await supabase.from('photographers').select('*').not('phone', 'is', null));
+  return rows.find(r => String(r.phone).replace(/\D/g, '').slice(-10) === digits) || null;
+}
+
 async function createPhotographer(b) {
   const row = {
     id: newId('PHT'),
@@ -190,6 +199,76 @@ async function listBookedDates(photographerId) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  USERS (is_admin=true) — backend-configurable PIN for the global
+//  "Take Booking" tool. Lives in the general public.users table
+//  rather than a dedicated admins table — admin-ness is just a flag.
+//  See supabase/users-schema.sql.
+// ═══════════════════════════════════════════════════════════════
+async function listActiveAdmins() {
+  return unwrap(await supabase.from('users').select('*').eq('is_admin', true));
+}
+async function getAdminById(id) {
+  const { data, error } = await supabase.from('users').select('*').eq('id', id).eq('is_admin', true).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data || null;
+}
+async function updateAdminPinHash(id, pinHash) {
+  return unwrap(await supabase.from('users').update({ pin_hash: pinHash }).eq('id', id).eq('is_admin', true).select());
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  KPIS — admin overrides for the dashboard stat strip (the values
+//  themselves are computed live from booking_requests in server.js;
+//  this table only holds a correction/override when one exists)
+// ═══════════════════════════════════════════════════════════════
+async function listKpiOverrides() {
+  return unwrap(await supabase.from('kpis').select('*'));
+}
+async function upsertKpiOverride(key, { label, value, unit }) {
+  return unwrap(await supabase.from('kpis')
+    .upsert({ key, label, value, unit: unit || '', updated_at: nowIso() }, { onConflict: 'key' })
+    .select().single());
+}
+async function deleteKpiOverride(key) {
+  return unwrap(await supabase.from('kpis').delete().eq('key', key).select());
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  OTP CODES — real email/WhatsApp verification (see notify.js)
+// ═══════════════════════════════════════════════════════════════
+async function createOtpCode({ channel, target, purpose, codeHash, expiresAt }) {
+  return unwrap(await supabase.from('otp_codes')
+    .insert({ channel, target, purpose, code_hash: codeHash, expires_at: expiresAt }).select().single());
+}
+async function getLatestOtp(channel, target, purpose) {
+  const rows = unwrap(await supabase.from('otp_codes').select('*')
+    .eq('channel', channel).eq('target', target).eq('purpose', purpose)
+    .is('consumed_at', null).order('created_at', { ascending: false }).limit(1));
+  return rows[0] || null;
+}
+// Most recent request regardless of consumed state — used only for the
+// resend cooldown, so a just-verified code doesn't let the cooldown lapse.
+async function getMostRecentOtpRequest(channel, target, purpose) {
+  const rows = unwrap(await supabase.from('otp_codes').select('created_at')
+    .eq('channel', channel).eq('target', target).eq('purpose', purpose)
+    .order('created_at', { ascending: false }).limit(1));
+  return rows[0] || null;
+}
+async function markOtpConsumed(id) {
+  return unwrap(await supabase.from('otp_codes').update({ consumed_at: nowIso() }).eq('id', id).select());
+}
+async function incrementOtpAttempts(id, currentAttempts) {
+  return unwrap(await supabase.from('otp_codes').update({ attempts: currentAttempts + 1 }).eq('id', id).select());
+}
+// How many codes were requested for this target+purpose in the last N seconds (rate limiting)
+async function countRecentOtp(channel, target, purpose, windowSeconds) {
+  const since = new Date(Date.now() - windowSeconds * 1000).toISOString();
+  const rows = unwrap(await supabase.from('otp_codes').select('id')
+    .eq('channel', channel).eq('target', target).eq('purpose', purpose).gte('created_at', since));
+  return rows.length;
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  STORAGE (replaces local /uploads)
 // ═══════════════════════════════════════════════════════════════
 async function uploadToBucket(bucket, path, buffer, contentType) {
@@ -206,9 +285,12 @@ async function removeFromBucket(bucket, paths) {
 
 module.exports = {
   supabase, AVATAR_BUCKET, PORTFOLIO_BUCKET, newId, nowIso,
-  listPhotographers, getPhotographerById, getPhotographerByEmail,
+  listPhotographers, getPhotographerById, getPhotographerByEmail, getPhotographerByPhone,
   createPhotographer, updatePhotographer, deletePhotographer,
   listPortfolio, addPortfolioImages, deletePortfolioImageByPath, deletePortfolioImageById, clearPortfolio,
   listBookings, getBookingById, createBooking, updateBooking, listBookedDates,
+  createOtpCode, getLatestOtp, getMostRecentOtpRequest, markOtpConsumed, incrementOtpAttempts, countRecentOtp,
+  listActiveAdmins, getAdminById, updateAdminPinHash,
+  listKpiOverrides, upsertKpiOverride, deleteKpiOverride,
   uploadToBucket, removeFromBucket
 };
